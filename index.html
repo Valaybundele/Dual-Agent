@@ -49,14 +49,14 @@
     .results-table td:first-child { text-align: left; }
     .highlight-row { background: #e9f0ff; }
     .delta { color: #15803d; font-weight: 700; }
-    .carousel-wrap { max-width: 1340px; margin: 0 auto; padding: 0 2.6rem; }
-    .results-carousel .item { padding: 0 .6rem; }
+    .carousel-wrap { max-width: 1400px; margin: 0 auto; padding: 0 3rem; }
+    .results-carousel .item { padding: 0 .6rem; } .results-carousel .vid { max-width: 1286px; margin: 0 auto; }
     .results-carousel .vid { box-shadow: 0 6px 18px rgba(0,0,0,.18); }
     .clip-head { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; margin-top: .7rem; }
     .clip-head h4 { font-weight: 700; margin: 0; font-size: 1.02rem; }
     .jf { font-family: 'Google Sans', sans-serif; font-size: .85rem; white-space: nowrap; background: #f3f5fa; border-radius: 999px; padding: .15rem .7rem; }
     .jf b { color: #15803d; }
-    .clip-cap { font-size: .92rem; color: #444; margin-top: .3rem; min-height: 3.4rem; }
+    .clip-cap { font-size: 1rem; color: #444; margin-top: .3rem; max-width: 1286px; margin-left: auto; margin-right: auto; } .clip-head { max-width: 1286px; margin-left: auto; margin-right: auto; }
     .slider-navigation-previous, .slider-navigation-next { background: #fff; border: 1px solid #ccd3e0; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
     .stat2 { text-align: center; padding: 1.1rem 1rem; border-radius: 12px; background: #f3f5fa; height: 100%; }
     .stat2 .num { font-family: 'Google Sans', sans-serif; font-size: 2rem; font-weight: 700; color: var(--acc); line-height: 1.1; }
@@ -259,8 +259,7 @@
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     if (!window.bulmaCarousel) return;
-    var opts = { slidesToScroll: 1, slidesToShow: 2, loop: true, infinite: false, autoplay: false, navigation: true, pagination: true,
-                 breakpoints: [{ changePoint: 900, slidesToShow: 1, slidesToScroll: 1 }] };
+    var opts = { slidesToScroll: 1, slidesToShow: 1, loop: true, infinite: false, autoplay: false, navigation: true, pagination: true };
     bulmaCarousel.attach('#carousel-secvos', opts);
     bulmaCarousel.attach('#carousel-lvos', opts);
   });
