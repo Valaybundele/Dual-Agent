@@ -207,16 +207,16 @@
       <div class="column is-full-width">
         <h2 class="title is-3 has-text-centered">Qualitative Results</h2>
         <div class="content has-text-justified">
-          <p>Each video shows the same LVOS-v2 sequence tracked by <strong>SAM 3</strong> (left, red) and by the <strong>dual agent</strong> (right, blue), with the ground-truth box in green. The two differ only inside the short windows where the verifier fires and a correction is committed; everywhere else the dual agent is SAM 3.</p>
+          <p>Each video shows the same LVOS-v2 sequence tracked by <strong>SAM 3</strong> (left, red) and by the <strong>dual agent</strong> (right, blue), with the ground-truth box in green. Each clip first shows the object being tracked correctly, then jumps to the moment it returns after a long absence, which is where SAM 3 and the dual agent diverge. Everywhere else the dual agent is SAM 3.</p>
         </div>
         <div class="columns is-multiline">
           <div class="column is-6">
             <video class="vid" autoplay muted loop playsinline poster="./static/videos/lvos_garage_rider.jpg"><source src="./static/videos/lvos_garage_rider.mp4" type="video/mp4"></video>
-            <p class="vid-caption"><strong>Reappearance after a long absence.</strong> The rider disappears behind the pillars of a parking garage. SAM 3 stays silent after he returns; the dual agent re-acquires him on the first verifier call that sees him again.</p>
+            <p class="vid-caption"><strong>Reappearance after a long absence.</strong> The target is the skateboard under the rider. Both trackers follow it until the camera turns away for about a minute. When it comes back into view, SAM 3 stays empty for the rest of the clip; the dual agent re-acquires it on the first verifier call that sees it.</p>
           </div>
           <div class="column is-6">
             <video class="vid" autoplay muted loop playsinline poster="./static/videos/lvos_garage_person.jpg"><source src="./static/videos/lvos_garage_person.mp4" type="video/mp4"></video>
-            <p class="vid-caption"><strong>Missed recovery.</strong> Same garage, a second person. SAM 3 misses him for several seconds after he re-enters the frame; the dual agent recovers him and hands the clean state back to the tracker.</p>
+            <p class="vid-caption"><strong>Missed recovery.</strong> Same garage, the person on the segway. Tracked cleanly at first, out of view for a minute, then back: SAM 3 misses him for several seconds after he re-enters, the dual agent recovers him at once and hands the clean state back to the tracker.</p>
           </div>
         </div>
         <div class="content has-text-centered" style="margin-top: 1.5rem;">
