@@ -2,90 +2,112 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="description" content="When Trackers Fail: VLM-Guided Verification and Recovery for Robust Video Object Segmentation (NeurIPS 2026). A dual-agent framework that lets SAM 3 detect and recover from its own tracking failures.">
+  <meta name="description" content="When Trackers Fail: VLM-Guided Verification and Recovery for Robust Video Object Segmentation (NeurIPS 2026). A dual-agent framework that lets SAM 3 notice and recover from its own tracking failures.">
   <meta name="keywords" content="SAM3, video object segmentation, tracking, vision-language models, failure detection, NeurIPS 2026">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>When Trackers Fail: VLM-Guided Verification and Recovery for Robust Video Object Segmentation</title>
   <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
   <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
   <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
   <link rel="stylesheet" href="./static/css/index.css">
   <link rel="icon" href="./static/images/favicon.svg">
   <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
   <style>
-    .hero-body { padding-top: 3rem; padding-bottom: 2rem; }
-    .publication-title { font-size: 2.2rem !important; }
-    .conference-badge { display: inline-block; background: linear-gradient(135deg, #1e56e8 0%, #6a3cc9 100%); color: white; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; }
-    .method-image { max-width: 100%; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-    .results-table { margin: 0 auto; border-collapse: collapse; font-size: 0.95rem; }
-    .results-table th, .results-table td { padding: 0.55rem 0.9rem; border: 1px solid #ddd; text-align: center; }
-    .results-table th { background: #f0f0f0; font-weight: 600; }
+    :root { --acc: #2f6df6; --acc2: #7c3aed; --sam: #d63b3b; --ours: #2f6df6; }
+    body { background: #fff; }
+    .hero.dark { background: radial-gradient(1200px 600px at 20% -10%, #24407a 0%, #0b1324 55%, #0a0f1c 100%); color: #fff; }
+    .hero.dark .hero-body { padding-top: 3.5rem; padding-bottom: 2.5rem; }
+    .hero.dark .title, .hero.dark .publication-authors a, .hero.dark .publication-authors { color: #fff; }
+    .hero.dark .publication-authors a:hover { color: #9fc0ff; }
+    .conference-badge { display: inline-block; background: linear-gradient(135deg, var(--acc) 0%, var(--acc2) 100%); color: #fff; padding: 0.4rem 1.1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 600; margin-bottom: 1rem; letter-spacing: .02em; }
+    .publication-title { font-size: 2.4rem !important; line-height: 1.15; }
+    .tagline { font-family: 'Google Sans', sans-serif; font-size: 1.35rem; color: #cfe0ff; margin-top: 1rem; }
+    .hero.dark .button.is-dark { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.35); }
+    .hero.dark .button.is-dark:hover { background: rgba(255,255,255,.22); }
+    .teaser-wrap { max-width: 1286px; margin: 0 auto; }
+    .vid { width: 100%; display: block; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.35); background: #000; }
+    .hero.dark strong { color: #fff; }
+    .teaser-caption { color: #dfe8ff; font-size: 1.05rem; max-width: 900px; margin: 1.2rem auto 0; text-align: center; }
+    .legend { display: inline-flex; gap: 1.2rem; font-size: .9rem; color: #cfd8ea; margin-top: .6rem; flex-wrap: wrap; justify-content: center; }
+    .legend span::before { content: ""; display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    .legend .l-sam::before { background: var(--sam); } .legend .l-ours::before { background: var(--ours); } .legend .l-gt::before { background: #28dc28; }
+    .impact { background: #0a0f1c; color: #fff; padding: 2.2rem 1rem 2.6rem; }
+    .impact .stat { text-align: center; padding: 1.2rem; }
+    .impact .num { font-family: 'Google Sans', sans-serif; font-size: 3rem; font-weight: 700; line-height: 1; background: linear-gradient(90deg, #9fc0ff, #c4b5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .impact .lbl { color: #cfd8ea; margin-top: .5rem; font-size: 1rem; }
+    .impact .sub { color: #8fa1c4; font-size: .85rem; }
+    .section-title { font-size: 2rem; font-weight: 700; }
+    .method-image { max-width: 100%; border-radius: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+    .contrib { height: 100%; border: 1px solid #e6e9f2; border-radius: 12px; }
+    .contrib .title { margin-bottom: .5rem; }
+    .contrib .icon { color: var(--acc); margin-right: .35rem; }
+    .results-table { margin: 0 auto; border-collapse: collapse; font-size: .95rem; width: 100%; }
+    .results-table th, .results-table td { padding: .55rem .8rem; border: 1px solid #e3e6ee; text-align: center; }
+    .results-table th { background: #f3f5fa; font-weight: 600; }
     .results-table td:first-child { text-align: left; }
-    .highlight-row { background: #e8eefd; }
-    .vid { width: 100%; display: block; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.12); background: #000; }
-    .vid-caption { font-size: 0.95rem; color: #444; margin-top: 0.6rem; }
-    .stat { text-align: center; padding: 1.2rem 1rem; border-radius: 10px; background: linear-gradient(135deg, #1e56e812 0%, #6a3cc912 100%); height: 100%; }
-    .stat .num { font-family: 'Google Sans', sans-serif; font-size: 2.2rem; font-weight: 700; color: #1e56e8; line-height: 1.1; }
-    .stat .lbl { font-size: 0.9rem; color: #444; margin-top: 0.35rem; }
-    .contrib { height: 100%; background: linear-gradient(135deg, #1e56e812 0%, #6a3cc912 100%); }
-    .contrib .title { margin-bottom: 0.6rem; }
-    .contrib .icon { color: #1e56e8; margin-right: 0.3rem; }
-    .teaser-wrap { max-width: 1000px; margin: 0 auto; }
-    .tag-ours { color: #1e56e8; font-weight: 600; }
+    .highlight-row { background: #e9f0ff; }
+    .delta { color: #15803d; font-weight: 700; }
+    .carousel-wrap { max-width: 1340px; margin: 0 auto; padding: 0 2.6rem; }
+    .results-carousel .item { padding: 0 .6rem; }
+    .results-carousel .vid { box-shadow: 0 6px 18px rgba(0,0,0,.18); }
+    .clip-head { display: flex; justify-content: space-between; align-items: baseline; gap: .6rem; margin-top: .7rem; }
+    .clip-head h4 { font-weight: 700; margin: 0; font-size: 1.02rem; }
+    .jf { font-family: 'Google Sans', sans-serif; font-size: .85rem; white-space: nowrap; background: #f3f5fa; border-radius: 999px; padding: .15rem .7rem; }
+    .jf b { color: #15803d; }
+    .clip-cap { font-size: .92rem; color: #444; margin-top: .3rem; min-height: 3.4rem; }
+    .slider-navigation-previous, .slider-navigation-next { background: #fff; border: 1px solid #ccd3e0; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+    .stat2 { text-align: center; padding: 1.1rem 1rem; border-radius: 12px; background: #f3f5fa; height: 100%; }
+    .stat2 .num { font-family: 'Google Sans', sans-serif; font-size: 2rem; font-weight: 700; color: var(--acc); line-height: 1.1; }
+    .stat2 .lbl { font-size: .9rem; color: #444; margin-top: .35rem; }
+    .note { font-size: .85rem; color: #666; }
     pre code { white-space: pre; }
   </style>
 </head>
 <body>
 
-<section class="hero">
+<section class="hero dark">
   <div class="hero-body">
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
           <div class="conference-badge">NeurIPS 2026</div>
           <h1 class="title is-1 publication-title">When Trackers Fail: VLM-Guided Verification and Recovery for Robust Video Object Segmentation</h1>
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><a href="https://valaybundele.github.io/">Valay Bundele</a><sup>1</sup>,</span>
-            <span class="author-block"><a href="#">Susmit Agrawal</a><sup>1</sup>,</span>
-            <span class="author-block"><a href="https://graphics.cs.uni-tuebingen.de/team/person?name=Mehran%20Hosseinzadeh">Mehran Hosseinzadeh</a><sup>1</sup>,</span>
-            <span class="author-block"><a href="#">The Nam Nguyen</a><sup>1</sup>,</span>
-            <span class="author-block"><a href="https://graphics.cs.uni-tuebingen.de/team/head">Hendrik P. A. Lensch</a><sup>1</sup></span>
+          <p class="tagline">Foundation trackers fail silently. We give SAM 3 a way to notice, and to recover.</p>
+          <div class="is-size-5 publication-authors" style="margin-top: 1.2rem;">
+            <span class="author-block"><a href="https://valaybundele.github.io/">Valay Bundele</a>,</span>
+            <span class="author-block"><a href="#">Susmit Agrawal</a>,</span>
+            <span class="author-block"><a href="https://graphics.cs.uni-tuebingen.de/team/person?name=Mehran%20Hosseinzadeh">Mehran Hosseinzadeh</a>,</span>
+            <span class="author-block"><a href="#">The Nam Nguyen</a>,</span>
+            <span class="author-block"><a href="https://graphics.cs.uni-tuebingen.de/team/head">Hendrik P. A. Lensch</a></span>
           </div>
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>University of Tübingen, Germany</span>
-          </div>
-          <div class="column has-text-centered">
+          <div class="is-size-6 publication-authors" style="color:#b9c6e0;">University of Tübingen, Germany</div>
+          <div class="column has-text-centered" style="margin-top: .6rem;">
             <div class="publication-links">
-              <span class="link-block">
-                <a href="#" class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span>
-                </a>
-              </span>
-              <span class="link-block">
-                <a href="#" class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon"><i class="fab fa-github"></i></span><span>Code</span>
-                </a>
-              </span>
+              <span class="link-block"><a href="#" class="external-link button is-normal is-rounded is-dark"><span class="icon"><i class="fas fa-file-pdf"></i></span><span>Paper</span></a></span>
+              <span class="link-block"><a href="#" class="external-link button is-normal is-rounded is-dark"><span class="icon"><i class="fab fa-github"></i></span><span>Code</span></a></span>
             </div>
           </div>
         </div>
+      </div>
+      <div class="teaser-wrap" style="margin-top: 1.4rem;">
+        <video class="vid" controls autoplay muted loop playsinline preload="auto" poster="./static/videos/secvos_car_shots.jpg">
+          <source src="./static/videos/secvos_car_shots.mp4" type="video/mp4">
+        </video>
+        <p class="teaser-caption"><strong>Same video, same frozen SAM 3.</strong> Every shot change wipes out SAM 3's track (IoU 0.00, left). The dual agent catches the failure and re-identifies the car in each new shot (right). The bars below each panel show per-frame IoU over the whole clip.</p>
+        <div class="has-text-centered"><div class="legend"><span class="l-sam">SAM 3</span><span class="l-ours">Dual-Agent (ours)</span><span class="l-gt">ground truth outline</span></div></div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="hero teaser">
+<section class="impact">
   <div class="container is-max-desktop">
-    <div class="hero-body">
-      <div class="teaser-wrap">
-        <video class="vid" autoplay muted loop playsinline poster="./static/videos/lvos_highway_car.jpg">
-          <source src="./static/videos/lvos_highway_car.mp4" type="video/mp4">
-        </video>
-      </div>
-      <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
-        <span style="font-weight: 600;">SAM 3 vs Dual-Agent (Ours):</span> the car leaves the view and comes back. SAM 3 never re-acquires it and keeps producing nothing, while the <span class="tag-ours">dual agent</span> notices the failure, re-prompts the tracker, and follows the car for the rest of the video. Green box: ground truth.
-      </h2>
+    <div class="columns is-centered">
+      <div class="column is-4"><div class="stat"><div class="num">+2.7</div><div class="lbl">J&amp;F on SeCVOS</div><div class="sub">74.2 → 76.9, largest gain on multi-scene-change videos</div></div></div>
+      <div class="column is-4"><div class="stat"><div class="num">+1.2</div><div class="lbl">J&amp;F on LVOS-v2</div><div class="sub">88.2 → 89.4, best unseen-object scores in the table</div></div></div>
+      <div class="column is-4"><div class="stat"><div class="num">4.8%</div><div class="lbl">of frames ever reach the verifier</div><div class="sub">88 committed corrections across 160 SeCVOS videos</div></div></div>
     </div>
   </div>
 </section>
@@ -94,143 +116,133 @@
   <div class="container is-max-desktop">
     <div class="columns is-centered has-text-centered">
       <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
+        <h2 class="title is-3 section-title">Abstract</h2>
         <div class="content has-text-justified">
-          <p>Recent segmentation-based trackers built on foundation models such as Segment Anything Model (SAM) achieve strong performance through memory-based mask propagation. Despite their strong generalization ability, these methods remain brittle under occlusion, reappearance, and distractor scenarios, where errors accumulate and lead to identity drift. Existing approaches improve robustness through better memory design and temporal modeling, yet they implicitly assume that propagated predictions remain reliable over time, lacking a mechanism to identify and correct failures.</p>
-          <p>We propose a <strong>failure-aware tracking framework</strong> that augments segmentation-based propagation with explicit reasoning and selective recovery. Our key idea is to decouple tracking into two complementary processes: <strong>verifying</strong> prediction reliability and <strong>recovering</strong> the target when failures occur. We introduce a <strong>dual-agent architecture</strong> consisting of a vision-language verification agent and a correction agent. The verification agent reasons over spatio-temporal context to assess whether current predictions remain consistent with the target object, detecting identity switches, missed recoveries, and distractor-induced failures. When unreliable predictions are identified, the correction agent is selectively activated to recover the target using temporal cues. Targeted training perturbations that simulate identity switches and distractor-induced drift further improve robustness under ambiguous scenarios. By explicitly modeling failure detection and recovery inside the tracking loop, our framework turns tracking from a purely propagation-based process into a <strong>self-correcting system</strong>. On <strong>LVOS-v2</strong> and <strong>SeCVOS</strong>, it improves SAM 3 by <strong>+1.2</strong> and <strong>+2.7 J&amp;F</strong> without modifying the propagator.</p>
+          <p>Segmentation-based trackers built on foundation models such as SAM propagate masks through a memory of past predictions. The memory is what makes them strong, and what makes them brittle: under occlusion, reappearance and look-alike distractors, errors enter the memory and compound, and the tracker keeps producing confident masks of the wrong object or of nothing at all. Prior work improves the propagator; it still assumes its own predictions can be trusted.</p>
+          <p>We propose a <strong>failure-aware tracking framework</strong> that keeps SAM 3 frozen and adds explicit reasoning and selective recovery on top. A vision-language <strong>verification agent</strong> reasons over spatio-temporal context to decide whether the current track is still the target, catching identity switches, missed recoveries and distractor-induced drift. Only when it flags a failure is a <strong>correction agent</strong> activated to relocalize the target, and a commit gate decides whether the correction may overwrite the tracker's memory. Targeted training perturbations teach the corrector the exact ambiguities that make propagators fail. The result turns tracking from a purely propagation-based process into a <strong>self-correcting system</strong>: with SAM 3 untouched, it improves <strong>LVOS-v2</strong> by <strong>+1.2</strong> and <strong>SeCVOS</strong> by <strong>+2.7 J&amp;F</strong>, intervening on fewer than 5% of frames.</p>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<section class="section" style="background-color: #f5f5f5;">
+<section class="section" style="background: #f7f8fb;">
   <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3 has-text-centered">Method Overview</h2>
-        <div class="content has-text-centered">
-          <img src="./static/images/method_overview.jpg" alt="Overview of the dual-agent framework" class="method-image">
-        </div>
-        <div class="content has-text-justified">
-          <p>SAM 3 stays <strong>frozen</strong> and keeps doing what it does best: memory-based mask propagation. On top of it we add a thin control layer. A <strong>sparse trigger gate</strong> watches cheap tracker signals (occlusion, reappearance, confidence variance) and only occasionally wakes a <strong>verification agent</strong>, a vision-language model that looks at trusted exemplars of the target together with the tracker's own recent, possibly corrupted, context and decides whether the current track is still the right object. When it says no, a fine-tuned <strong>correction agent</strong> re-localizes the target (or declares it absent), and a <strong>commit gate</strong> decides whether that correction may overwrite SAM 3's memory. A committed correction re-prompts SAM 3, so propagation resumes from a clean state instead of a drifted one.</p>
-        </div>
-        <h3 class="title is-4 has-text-centered" style="margin-top: 2rem;">Key Ideas</h3>
-        <div class="columns is-multiline">
-          <div class="column is-6">
-            <div class="box contrib">
-              <h3 class="title is-5"><span class="icon"><i class="fas fa-code-branch"></i></span>Verify and correct are different jobs</h3>
-              <p>Deciding whether the track is wrong and deciding where the target is are separated into two agents, so each can be a precision-oriented specialist instead of one model doing both.</p>
-            </div>
-          </div>
-          <div class="column is-6">
-            <div class="box contrib">
-              <h3 class="title is-5"><span class="icon"><i class="fas fa-eye"></i></span>Tracker-aware reasoning</h3>
-              <p>The verifier sees both trusted exemplars and the tracker's own recent predictions, so it reasons about the state the tracker is actually in rather than about a clean oracle trajectory.</p>
-            </div>
-          </div>
-          <div class="column is-6">
-            <div class="box contrib">
-              <h3 class="title is-5"><span class="icon"><i class="fas fa-shield-alt"></i></span>State-safe intervention</h3>
-              <p>A wrong correction rewrites future memory, so interventions are rare by design: sparse triggers decide when to look, and a commit gate decides whether a correction is trusted enough to overwrite the tracker state.</p>
-            </div>
-          </div>
-          <div class="column is-6">
-            <div class="box contrib">
-              <h3 class="title is-5"><span class="icon"><i class="fas fa-random"></i></span>Failure-oriented supervision</h3>
-              <p>The corrector is trained on perturbations that mimic identity switches and distractor-induced drift, the exact ambiguities that make SAM-style propagators fail.</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <h2 class="title is-3 section-title has-text-centered">How it works</h2>
+    <div class="content has-text-centered"><img src="./static/images/method_overview.jpg" alt="Overview of the dual-agent framework" class="method-image"></div>
+    <div class="content has-text-justified">
+      <p>SAM 3 keeps doing what it does best: memory-based mask propagation. A <strong>sparse trigger gate</strong> watches cheap tracker signals (occlusion, reappearance, confidence variance) and only occasionally wakes the <strong>verification agent</strong>, a vision-language model that looks at trusted exemplars of the target together with the tracker's own recent, possibly corrupted, context and decides whether the track is still the right object. When it says no, the fine-tuned <strong>correction agent</strong> relocalizes the target or declares it absent, and a <strong>commit gate</strong> decides whether that correction may overwrite SAM 3's memory. A committed correction re-prompts SAM 3, so propagation resumes from a clean state instead of a drifted one.</p>
+    </div>
+    <div class="columns is-multiline" style="margin-top: .5rem;">
+      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-code-branch"></i></span>Verifying and correcting are different jobs</h3><p>Deciding whether the track is wrong and deciding where the target is are split between two agents, so each can be a precision-oriented specialist instead of one model doing both.</p></div></div>
+      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-eye"></i></span>Tracker-aware reasoning</h3><p>The verifier sees both trusted exemplars and the tracker's own recent predictions, so it reasons about the state the tracker is actually in rather than about a clean oracle trajectory.</p></div></div>
+      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-shield-alt"></i></span>State-safe intervention</h3><p>A wrong correction rewrites future memory, so interventions are rare by design: sparse triggers decide when to look, a commit gate decides whether a correction is trusted enough to overwrite the tracker state.</p></div></div>
+      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-random"></i></span>Failure-oriented supervision</h3><p>The corrector is trained on perturbations that mimic identity switches and distractor-induced drift, the exact ambiguities that make SAM-style propagators fail.</p></div></div>
     </div>
   </div>
 </section>
 
 <section class="section">
   <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3 has-text-centered">Quantitative Results</h2>
-        <div class="content has-text-justified">
-          <p>With SAM 3 kept entirely frozen, the dual agent improves it on both long-video benchmarks and reaches the strongest numbers in each table. On <strong>LVOS-v2</strong> it also gives the best unseen-object scores. On <strong>SeCVOS</strong>, built around scene cuts and reappearance, the gain grows with scene complexity and is largest on multi-scene-change videos, exactly where identity has to be re-established rather than refined.</p>
-        </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center; margin-top: 1rem;">
-          <div style="flex: 1; min-width: 360px;">
-            <h4 class="title is-5 has-text-centered" style="margin-bottom: 1rem;">LVOS-v2 validation</h4>
-            <table class="results-table" style="width: 100%;">
-              <thead><tr><th>Method</th><th>J&amp;F</th><th>J<sub>s</sub></th><th>F<sub>s</sub></th><th>J<sub>u</sub></th><th>F<sub>u</sub></th></tr></thead>
-              <tbody>
-                <tr><td>XMem</td><td>64.5</td><td>62.6</td><td>69.1</td><td>60.6</td><td>65.6</td></tr>
-                <tr><td>SAM 2.1</td><td>84.1</td><td>80.7</td><td>87.4</td><td>80.6</td><td>87.7</td></tr>
-                <tr><td>SAM2.1Long</td><td>85.9</td><td>81.7</td><td>88.6</td><td>83.0</td><td>90.5</td></tr>
-                <tr><td>SeC</td><td>86.5</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
-                <tr><td>SAM 3</td><td>88.2</td><td><strong>85.4</strong></td><td><strong>92.9</strong></td><td>83.3</td><td>91.5</td></tr>
-                <tr class="highlight-row"><td><strong>Dual-Agent (Ours)</strong></td><td><strong>89.4</strong></td><td>84.9</td><td>92.7</td><td><strong>85.8</strong></td><td><strong>94.1</strong></td></tr>
-              </tbody>
-            </table>
-            <p class="vid-caption has-text-centered">s / u: seen / unseen object classes.</p>
-          </div>
-          <div style="flex: 1; min-width: 360px;">
-            <h4 class="title is-5 has-text-centered" style="margin-bottom: 1rem;">SeCVOS-160 (J&amp;F by scene complexity)</h4>
-            <table class="results-table" style="width: 100%;">
-              <thead><tr><th>Method</th><th>No cut</th><th>Single cut</th><th>Multi cut</th><th>Overall</th></tr></thead>
-              <tbody>
-                <tr><td>Cutie-base</td><td>72.5</td><td>53.0</td><td>48.3</td><td>52.7</td></tr>
-                <tr><td>SAM 2.1</td><td>79.4</td><td>58.5</td><td>52.4</td><td>58.2</td></tr>
-                <tr><td>SAMURAI</td><td>81.8</td><td>60.6</td><td>59.3</td><td>62.2</td></tr>
-                <tr><td>SAM2.1Long</td><td>81.3</td><td>61.8</td><td>58.5</td><td>62.3</td></tr>
-                <tr><td>SeC</td><td>84.2</td><td>69.6</td><td>67.5</td><td>70.0</td></tr>
-                <tr><td>SAM 3</td><td>87.1</td><td>74.6</td><td>69.3</td><td>74.2</td></tr>
-                <tr class="highlight-row"><td><strong>Dual-Agent (Ours)</strong></td><td><strong>88.1</strong></td><td><strong>76.2</strong></td><td><strong>73.4</strong></td><td><strong>76.9</strong></td></tr>
-              </tbody>
-            </table>
-            <p class="vid-caption has-text-centered">Scene-stratified protocol of SeC; cut = scene change.</p>
-          </div>
-        </div>
-
-        <h4 class="title is-5 has-text-centered" style="margin-top: 2.5rem;">The gain comes from a handful of well-placed interventions</h4>
-        <div class="columns is-multiline is-centered" style="margin-top: 0.5rem;">
-          <div class="column is-3"><div class="stat"><div class="num">4.8%</div><div class="lbl">of SeCVOS frames ever reach the verifier</div></div></div>
-          <div class="column is-3"><div class="stat"><div class="num">88</div><div class="lbl">corrections committed over all 160 videos (1360 verifier calls, 240 corrector calls)</div></div></div>
-          <div class="column is-3"><div class="stat"><div class="num">76.9%</div><div class="lbl">of verifiable commits improve over SAM 3 (40 better, 11 worse, 1 neutral)</div></div></div>
-          <div class="column is-3"><div class="stat"><div class="num">+0.59</div><div class="lbl">IoU recovered by the corrector once SAM 3 has lost the target</div></div></div>
-        </div>
-      </div>
+    <h2 class="title is-3 section-title has-text-centered">Scene cuts and reappearance (SeCVOS)</h2>
+    <div class="content has-text-justified"><p>SeCVOS is built around shot changes. Each cut resets the scene, and SAM 3's memory of the previous shot stops matching anything: its IoU falls to zero and stays there. The dual agent notices and re-identifies the target in the new shot. Left: SAM 3. Right: dual agent. Green outline: ground truth. Drag the seek bar to any point.</p></div>
+  </div>
+  <div class="carousel-wrap">
+    <div id="carousel-secvos" class="carousel results-carousel">
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_box.jpg"><source src="./static/videos/secvos_box.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Cardboard box</h4><span class="jf">J&amp;F 16.0 → <b>96.4</b></span></div><p class="clip-cap">After the first cut SAM 3 never finds the box again. The dual agent re-acquires it immediately and holds it through every later shot.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_rider.jpg"><source src="./static/videos/secvos_rider.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Motorcycle rider</h4><span class="jf">J&amp;F 24.7 → <b>87.0</b></span></div><p class="clip-cap">The rider appears in a new shot after a cut. SAM 3 misses him entirely; the verifier flags the empty track and the corrector locks on.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_dolphin.jpg"><source src="./static/videos/secvos_dolphin.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Fish across four shots</h4><span class="jf">J&amp;F 18.4 → <b>69.1</b></span></div><p class="clip-cap">Underwater, at the surface, then on a trailer: the same fish in very different views. SAM 3 loses it at the first cut; the dual agent follows it through each change.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_car_shots.jpg"><source src="./static/videos/secvos_car_shots.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Red car, changing camera</h4><span class="jf">J&amp;F 64.2 → <b>90.3</b></span></div><p class="clip-cap">Wide shot, in-car shot, chase shot. SAM 3 drops to zero at each cut; the dual agent re-identifies the car every time.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_earbud.jpg"><source src="./static/videos/secvos_earbud.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Earbud</h4><span class="jf">J&amp;F 44.7 → <b>83.7</b></span></div><p class="clip-cap">A small object across product shots. SAM 3 cannot bridge the cut; the corrector recovers it from the exemplars.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_car_person.jpg"><source src="./static/videos/secvos_car_person.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Car with a person in the way</h4><span class="jf">J&amp;F 64.9 → <b>90.8</b></span></div><p class="clip-cap">After the cut the car is partly covered by a person. SAM 3 loses it; the dual agent recovers the car and keeps the person out of the mask.</p></div>
     </div>
   </div>
 </section>
 
-<section class="section" style="background-color: #f5f5f5;">
+<section class="section" style="background: #f7f8fb;">
   <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3 has-text-centered">Qualitative Results</h2>
-        <div class="content has-text-justified">
-          <p>Each video shows the same LVOS-v2 sequence tracked by <strong>SAM 3</strong> (left, red) and by the <strong>dual agent</strong> (right, blue), with the ground-truth box in green. Each clip first shows the object being tracked correctly, then jumps to the moment it returns after a long absence, which is where SAM 3 and the dual agent diverge. Everywhere else the dual agent is SAM 3.</p>
-        </div>
-        <div class="columns is-multiline">
-          <div class="column is-6">
-            <video class="vid" autoplay muted loop playsinline poster="./static/videos/lvos_garage_rider.jpg"><source src="./static/videos/lvos_garage_rider.mp4" type="video/mp4"></video>
-            <p class="vid-caption"><strong>Reappearance after a long absence.</strong> The target is the skateboard under the rider. Both trackers follow it until the camera turns away for about a minute. When it comes back into view, SAM 3 stays empty for the rest of the clip; the dual agent re-acquires it on the first verifier call that sees it.</p>
-          </div>
-          <div class="column is-6">
-            <video class="vid" autoplay muted loop playsinline poster="./static/videos/lvos_garage_person.jpg"><source src="./static/videos/lvos_garage_person.mp4" type="video/mp4"></video>
-            <p class="vid-caption"><strong>Missed recovery.</strong> Same garage, the person on the segway. Tracked cleanly at first, out of view for a minute, then back: SAM 3 misses him for several seconds after he re-enters, the dual agent recovers him at once and hands the clean state back to the tracker.</p>
-          </div>
-        </div>
-        <div class="content has-text-centered" style="margin-top: 1.5rem;">
-          <img src="./static/images/qualitative_toy_train.jpg" alt="Drift on a toy train among similar distractors" class="method-image">
-          <p class="vid-caption"><strong>Drift onto a look-alike.</strong> Rows: ground truth, SAM 3, dual agent. Among four similar toy trains SAM 3 drifts onto the wrong one as the camera moves; the verifier catches the switch and the corrector returns the track to the green train.</p>
-        </div>
+    <h2 class="title is-3 section-title has-text-centered">Long videos (LVOS-v2)</h2>
+    <div class="content has-text-justified"><p>LVOS-v2 videos run for minutes with the target leaving and re-entering the view. Once SAM 3 misses a reappearance, it rarely recovers on its own. Each clip starts with both trackers on the object, then jumps to the reappearance where they diverge; everywhere else the dual agent <em>is</em> SAM 3.</p></div>
+  </div>
+  <div class="carousel-wrap">
+    <div id="carousel-lvos" class="carousel results-carousel">
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_zebra.jpg"><source src="./static/videos/lvos_zebra.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Zebra among zebras</h4><span class="jf">J&amp;F 33.7 → <b>92.5</b></span></div><p class="clip-cap">The target zebra walks out of view. When it returns, SAM 3 produces nothing while look-alikes roam the enclosure; the dual agent re-acquires the right animal and keeps it.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_highway_car.jpg"><source src="./static/videos/lvos_highway_car.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Highway car</h4><span class="jf">J&amp;F 48.4 → <b>83.0</b></span></div><p class="clip-cap">The camera cuts away and comes back. SAM 3 never re-acquires the car; the dual agent does, and follows it for the rest of the video.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_gorilla.jpg"><source src="./static/videos/lvos_gorilla.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Young gorilla</h4><span class="jf">J&amp;F 63.8 → <b>87.4</b></span></div><p class="clip-cap">After an occlusion SAM 3 latches onto the adult gorilla in the foreground. The verifier catches the identity switch and the corrector returns to the young one.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_koi.jpg"><source src="./static/videos/lvos_koi.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Koi in a crowded pond</h4><span class="jf">J&amp;F 78.8 → <b>93.6</b></span></div><p class="clip-cap">The fish leaves the frame and re-enters among a dozen similar fish. SAM 3 misses the reappearance; the dual agent recovers the correct one.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_skateboard.jpg"><source src="./static/videos/lvos_skateboard.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Skateboard in a parking garage</h4><span class="jf">J&amp;F 50.1 → <b>87.6</b></span></div><p class="clip-cap">A small, low-contrast target. Out of view for a minute, then back: SAM 3 stays empty, the dual agent re-acquires it on the first verifier call that sees it.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_segway.jpg"><source src="./static/videos/lvos_segway.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Person on a segway</h4><span class="jf">J&amp;F 86.8 → <b>92.8</b></span></div><p class="clip-cap">After re-entering the frame SAM 3 misses him for several seconds; the dual agent recovers him at once and hands the clean state back to the tracker.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_billiard.jpg"><source src="./static/videos/lvos_billiard.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Billiard ball</h4><span class="jf">J&amp;F 81.6 → <b>88.2</b></span></div><p class="clip-cap">A hand and cue cover the ball. SAM 3 loses it and only recovers much later; the dual agent is back on the ball as soon as it is visible.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/lvos_fish.jpg"><source src="./static/videos/lvos_fish.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Spotted fish</h4><span class="jf">J&amp;F 72.8 → <b>80.8</b></span></div><p class="clip-cap">The fish swims behind a rock. On reappearance SAM 3 stays empty; the dual agent re-acquires it.</p></div>
+    </div>
+  </div>
+  <div class="container is-max-desktop"><p class="note has-text-centered" style="margin-top: 1rem;">Per-object J&amp;F from the official evaluators. SeCVOS clips use the paper's run; LVOS-v2 clips use a re-run of the same recipe (89.3 J&amp;F overall).</p></div>
+</section>
+
+<section class="section">
+  <div class="container is-max-desktop">
+    <h2 class="title is-3 section-title has-text-centered">Results</h2>
+    <div class="content has-text-justified"><p>With SAM 3 kept entirely frozen, the dual agent improves it on both benchmarks and reaches the strongest numbers in each table. On SeCVOS the gain grows with scene complexity and is largest on multi-scene-change videos, exactly where identity has to be re-established rather than refined.</p></div>
+    <div class="columns">
+      <div class="column is-6">
+        <h4 class="title is-5 has-text-centered">LVOS-v2 validation</h4>
+        <table class="results-table">
+          <thead><tr><th>Method</th><th>J&amp;F</th><th>J<sub>s</sub></th><th>F<sub>s</sub></th><th>J<sub>u</sub></th><th>F<sub>u</sub></th></tr></thead>
+          <tbody>
+            <tr><td>XMem</td><td>64.5</td><td>62.6</td><td>69.1</td><td>60.6</td><td>65.6</td></tr>
+            <tr><td>SAM 2.1</td><td>84.1</td><td>80.7</td><td>87.4</td><td>80.6</td><td>87.7</td></tr>
+            <tr><td>SAM2.1Long</td><td>85.9</td><td>81.7</td><td>88.6</td><td>83.0</td><td>90.5</td></tr>
+            <tr><td>SeC</td><td>86.5</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            <tr><td>SAM 3</td><td>88.2</td><td><strong>85.4</strong></td><td><strong>92.9</strong></td><td>83.3</td><td>91.5</td></tr>
+            <tr class="highlight-row"><td><strong>Dual-Agent (Ours)</strong></td><td><strong>89.4</strong> <span class="delta">+1.2</span></td><td>84.9</td><td>92.7</td><td><strong>85.8</strong></td><td><strong>94.1</strong></td></tr>
+          </tbody>
+        </table>
+        <p class="note has-text-centered">s / u: seen / unseen object classes.</p>
       </div>
+      <div class="column is-6">
+        <h4 class="title is-5 has-text-centered">SeCVOS-160, J&amp;F by scene complexity</h4>
+        <table class="results-table">
+          <thead><tr><th>Method</th><th>No cut</th><th>One cut</th><th>Multi cut</th><th>Overall</th></tr></thead>
+          <tbody>
+            <tr><td>Cutie-base</td><td>72.5</td><td>53.0</td><td>48.3</td><td>52.7</td></tr>
+            <tr><td>SAM 2.1</td><td>79.4</td><td>58.5</td><td>52.4</td><td>58.2</td></tr>
+            <tr><td>SAMURAI</td><td>81.8</td><td>60.6</td><td>59.3</td><td>62.2</td></tr>
+            <tr><td>SAM2.1Long</td><td>81.3</td><td>61.8</td><td>58.5</td><td>62.3</td></tr>
+            <tr><td>SeC</td><td>84.2</td><td>69.6</td><td>67.5</td><td>70.0</td></tr>
+            <tr><td>SAM 3</td><td>87.1</td><td>74.6</td><td>69.3</td><td>74.2</td></tr>
+            <tr class="highlight-row"><td><strong>Dual-Agent (Ours)</strong></td><td><strong>88.1</strong></td><td><strong>76.2</strong></td><td><strong>73.4</strong> <span class="delta">+4.1</span></td><td><strong>76.9</strong> <span class="delta">+2.7</span></td></tr>
+          </tbody>
+        </table>
+        <p class="note has-text-centered">Scene-stratified protocol of SeC.</p>
+      </div>
+    </div>
+    <h4 class="title is-5 has-text-centered" style="margin-top: 2rem;">The gain comes from a handful of well-placed interventions</h4>
+    <div class="columns is-multiline is-centered">
+      <div class="column is-3"><div class="stat2"><div class="num">1360</div><div class="lbl">verifier calls over 160 SeCVOS videos, 4.8% of frames</div></div></div>
+      <div class="column is-3"><div class="stat2"><div class="num">88</div><div class="lbl">corrections committed, out of 240 corrector calls</div></div></div>
+      <div class="column is-3"><div class="stat2"><div class="num">76.9%</div><div class="lbl">of verifiable commits improve over SAM 3 (40 better, 11 worse, 1 neutral)</div></div></div>
+      <div class="column is-3"><div class="stat2"><div class="num">+0.59</div><div class="lbl">IoU recovered by the corrector once SAM 3 has lost the target</div></div></div>
     </div>
   </div>
 </section>
 
-<section class="section" id="BibTeX">
+<section class="section" id="BibTeX" style="background: #f7f8fb;">
   <div class="container is-max-desktop content">
-    <h2 class="title is-3">BibTeX</h2>
+    <h2 class="title is-3 section-title">BibTeX</h2>
     <pre><code>@inproceedings{bundele2026whentrackersfail,
   title     = {When Trackers Fail: VLM-Guided Verification and Recovery for Robust Video Object Segmentation},
   author    = {Bundele, Valay and Agrawal, Susmit and Hosseinzadeh, Mehran and Nguyen, The Nam and Lensch, Hendrik P. A.},
@@ -241,15 +253,17 @@
 </section>
 
 <footer class="footer">
-  <div class="container">
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content has-text-centered">
-          <p>Website template adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project page.</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div class="container"><div class="content has-text-centered"><p>Website template adapted from the <a href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project page.</p></div></div>
 </footer>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    if (!window.bulmaCarousel) return;
+    var opts = { slidesToScroll: 1, slidesToShow: 2, loop: true, infinite: false, autoplay: false, navigation: true, pagination: true,
+                 breakpoints: [{ changePoint: 900, slidesToShow: 1, slidesToScroll: 1 }] };
+    bulmaCarousel.attach('#carousel-secvos', opts);
+    bulmaCarousel.attach('#carousel-lvos', opts);
+  });
+</script>
 </body>
 </html>
