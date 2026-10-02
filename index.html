@@ -123,7 +123,7 @@
 <body>
 
 <nav class="topnav"><div class="inner"><span class="brand">Dual-Agent · NeurIPS 2026</span>
-  <a class="nl" href="#why">Why</a><a class="nl" href="#how">How</a><a class="nl" href="#videos">Videos</a><a class="nl" href="#results">Results</a><a class="nl" href="#bibtex">BibTeX</a></div></nav>
+  <a class="nl" href="#why">Why</a><a class="nl" href="#how">How</a><a class="nl" href="#inside">Inside</a><a class="nl" href="#videos">Videos</a><a class="nl" href="#results">Results</a><a class="nl" href="#bibtex">BibTeX</a></div></nav>
 
 <section class="hero dark">
   <div class="hero-body">
@@ -151,10 +151,10 @@
         </div>
       </div>
       <div class="teaser-wrap" style="margin-top: 1.2rem;">
-        <video class="vid" controls autoplay muted loop playsinline preload="auto" poster="./static/videos/secvos_car_shots.jpg">
-          <source src="./static/videos/secvos_car_shots.mp4" type="video/mp4">
+        <video class="vid" controls autoplay muted loop playsinline preload="auto" poster="./static/videos/teaser_car.jpg">
+          <source src="./static/videos/teaser_car.mp4" type="video/mp4">
         </video>
-        <p class="teaser-caption">Same video, same frozen SAM 3. Each shot change breaks SAM 3's track (left, IoU 0.00). Dual-Agent detects the failure and re-identifies the car in every new shot (right). The bar under each panel is the per-frame IoU: green correct, red wrong.</p>
+        <p class="teaser-caption">First SAM 3 on its own: it tracks the car until the shot changes, then never finds it again. Then the same video with Dual-Agent on top of the same frozen SAM 3: the verifier flags the lost track and the corrector re-localizes the car. The bar under each panel is the per-frame IoU: green correct, red wrong.</p>
         <div class="has-text-centered"><div class="legend"><span class="l-sam">SAM 3</span><span class="l-ours">Dual-Agent</span><span class="l-gt">ground truth</span></div></div>
       </div>
     </div>
@@ -198,19 +198,32 @@
   </div>
 </section>
 
-<section class="section plain" id="videos">
+<section class="section plain" id="inside">
   <div class="container is-max-desktop">
-    <div class="has-text-centered"><div class="eyebrow">03 · Qualitative results</div><h2 class="title is-3 section-title">Where SAM 3 fails and Dual-Agent recovers</h2></div>
+    <div class="has-text-centered"><div class="eyebrow">03 · One intervention, step by step</div><h2 class="title is-3 section-title">What Dual-Agent actually saw and decided</h2></div>
+    <p class="lead">One real intervention from the SecVOS run, reconstructed from the saved telemetry: the frames the verifier was given, an excerpt of its reasoning, its verdict, the corrector's box, and the moment SAM 3's memory is reset. Nothing is staged.</p>
+    <div class="teaser-wrap">
+      <video class="vid" controls muted playsinline preload="metadata" poster="./static/videos/mechanism_unicorn.jpg"><source src="./static/videos/mechanism_unicorn.mp4" type="video/mp4"></video>
+      <p class="clip-cap" style="margin-top: .8rem;">After a shot change SAM 3 stops predicting. The confidence-variance trigger fires at frame 10; the verifier, given two exemplars and SAM 3's own recent boxes, reasons that the target is still visible on the right and votes INCORRECT twice; the corrector returns a box with IoU 0.97 against ground truth; the verifier re-checks it, the commit gate passes, and SAM 3 continues from the corrected state.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section alt" id="videos">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered"><div class="eyebrow">04 · Qualitative results</div><h2 class="title is-3 section-title">Where SAM 3 fails and Dual-Agent recovers</h2></div>
     <p class="lead">Left: SAM 3. Right: Dual-Agent. Green outline: ground truth. Each clip begins with both trackers on the object and runs through the point where they diverge. Everywhere else, Dual-Agent <em>is</em> SAM 3.</p>
     <h4 class="block-title">Scene cuts (SecVOS)</h4>
     <p class="note has-text-centered" style="margin-bottom: .8rem;">A cut invalidates the memory of the previous shot. SAM 3's IoU drops to zero; Dual-Agent re-identifies the target in the new shot.</p>
   </div>
   <div class="carousel-wrap">
     <div id="carousel-secvos" class="carousel results-carousel">
-      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_box.jpg"><source src="./static/videos/secvos_box.mp4" type="video/mp4"></video>
-        <div class="clip-head"><h4>Cardboard box</h4><span class="jf">J&amp;F 16.0 → <b>96.4</b></span></div><p class="clip-cap">After the first cut SAM 3 never finds the box again. Dual-Agent re-acquires it immediately and holds it through every later shot.</p></div>
-      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_rider.jpg"><source src="./static/videos/secvos_rider.mp4" type="video/mp4"></video>
-        <div class="clip-head"><h4>Motorcycle rider</h4><span class="jf">J&amp;F 24.7 → <b>87.0</b></span></div><p class="clip-cap">The rider appears in a new shot after a cut. SAM 3 misses him entirely; the verifier flags the empty track and the corrector locks on.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_volvo.jpg"><source src="./static/videos/secvos_volvo.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Car, interior shots</h4><span class="jf">J&amp;F 64.2 → <b>95.9</b></span></div><p class="clip-cap">The video cuts to the car's interior, where the target is not visible. SAM 3 keeps painting masks on seats and dashboard for 59 frames; Dual-Agent's verifier flags the false positive and the corrector declares the target absent, so the memory is cleared until the car returns.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_kitchen.jpg"><source src="./static/videos/secvos_kitchen.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Man in a kitchen, several shots</h4><span class="jf">J&amp;F 49.3 → <b>75.3</b></span></div><p class="clip-cap">Across the cuts SAM 3 switches to the wrong person, then loses the man in the wide shot. Dual-Agent catches the identity switch and re-localizes him.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_cook.jpg"><source src="./static/videos/secvos_cook.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Cook, alternating close-ups</h4><span class="jf">J&amp;F 57.3 → <b>84.5</b></span></div><p class="clip-cap">Close-ups of hands alternate with wide shots. After a reappearance Dual-Agent re-anchors the track; SAM 3 alone later loses the hands in the close-up.</p></div>
       <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_dolphin.jpg"><source src="./static/videos/secvos_dolphin.mp4" type="video/mp4"></video>
         <div class="clip-head"><h4>Fish across four shots</h4><span class="jf">J&amp;F 18.4 → <b>69.1</b></span></div><p class="clip-cap">Underwater, at the surface, then on a trailer: the same fish in very different views. SAM 3 loses it at the first cut; Dual-Agent follows it through each change.</p></div>
       <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/secvos_car_shots.jpg"><source src="./static/videos/secvos_car_shots.mp4" type="video/mp4"></video>
@@ -248,9 +261,9 @@
   <div class="container is-max-desktop"><p class="note has-text-centered" style="margin-top: .5rem;">Per-object J&amp;F from the official evaluators. SecVOS clips are from the paper's run; LVOS-v2 clips from a re-run of the same recipe (89.3 vs. 89.4 J&amp;F overall).</p></div>
 </section>
 
-<section class="section alt" id="results">
+<section class="section plain" id="results">
   <div class="container is-max-desktop">
-    <div class="has-text-centered"><div class="eyebrow">04 · Quantitative results</div><h2 class="title is-3 section-title">Consistent gains, and they transfer</h2></div>
+    <div class="has-text-centered"><div class="eyebrow">05 · Quantitative results</div><h2 class="title is-3 section-title">Consistent gains, and they transfer</h2></div>
     <p class="lead">With SAM 3 frozen, Dual-Agent improves it on both VOS benchmarks, and most where identity must be re-established: the SecVOS gain grows from +1.0 on single-shot videos to +4.1 on videos with multiple scene changes. Removing the verifier returns Dual-Agent to the SAM 3 baseline (74.1 vs 74.2), so the gain comes from detecting failures, not from conservative acceptance.</p>
     <div class="columns">
       <div class="column is-6">
@@ -323,7 +336,7 @@
   </div>
 </section>
 
-<section class="section plain" id="bibtex">
+<section class="section alt" id="bibtex">
   <div class="container is-max-desktop content">
     <div class="eyebrow">Cite</div><h2 class="title is-3 section-title">BibTeX</h2>
     <pre><code>@inproceedings{bundele2026whentrackersfail,
