@@ -190,7 +190,7 @@
     <p class="lead">Dual-Agent separates two questions that propagation conflates: <em>is the track still correct?</em> and <em>where is the target?</em> A <strong>verification agent</strong> answers the first; a <strong>correction agent</strong>, invoked only on a detected failure, answers the second. A committed correction re-prompts SAM 3, so propagation continues from a clean state rather than a corrupted one.</p>
     <div class="content has-text-centered"><div class="figcard"><img src="./static/images/pipeline_cr.jpg" alt="Overview of the Dual-Agent framework" class="method-image" style="max-width: 900px;"></div></div>
     <div class="steps" style="margin-top: 1.4rem;">
-      <div class="step"><div class="n"></div><div><h4>Trigger sparsely</h4><p>The agents run only when SAM 3's own signals suggest trouble: during occlusions, shortly after a reappearance, and when the tracker's confidence becomes unstable over a short window, an early sign of identity drift. The verifier is reached on 4.8% of frames.</p></div></div>
+      <div class="step"><div class="n"></div><div><h4>Trigger sparsely</h4><p>Dual-Agent runs only when SAM 3's own signals suggest trouble: during occlusions, shortly after a reappearance, and when the tracker's confidence becomes unstable over a short window, an early sign of identity drift. The verifier is reached on 4.8% of frames.</p></div></div>
       <div class="step"><div class="n"></div><div><h4>Verify against the tracker's own history</h4><p>A zero-shot VLM (Qwen3-VL-8B-Thinking) sees two trusted exemplars of the target, four context frames carrying the tracker's own, possibly wrong, boxes, and the query frame. It is asked to locate the target first and only then judge the tracker's box, which makes the decision about identity rather than box quality.</p></div></div>
       <div class="step"><div class="n"></div><div><h4>Correct only when needed</h4><p>A lighter VLM (Qwen3-VL-4B-Instruct) fine-tuned on failures mined from SAM 3's own runs, augmented with identity-switch and distractor perturbations, relocalizes the target or declares it absent. On held-out queries it gains +0.59 IoU where SAM 3 has lost the target and slightly hurts where SAM 3 is already right, which is why the verifier gates it.</p></div></div>
       <div class="step"><div class="n"></div><div><h4>Commit conservatively</h4><p>A correction overwrites SAM 3's memory only if it differs substantially from the current hypothesis. One wrong commit corrupts many future frames; one right reset recovers a long segment. On SecVOS, 40 of the 52 checkable commits improve on SAM 3.</p></div></div>
@@ -286,7 +286,7 @@
       </div>
     </div>
 
-    <h4 class="block-title">The same agents, unchanged, on other propagators (SecVOS-160 J&amp;F)</h4>
+    <h4 class="block-title">Dual-Agent, unchanged, on other propagators (SecVOS-160 J&amp;F)</h4>
     <table class="results-table">
       <thead>
         <tr><th rowspan="2">Propagator</th><th colspan="2">Overall</th><th colspan="2">No scene change</th><th colspan="2">Single change</th><th colspan="2">Multiple changes</th></tr>
