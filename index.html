@@ -78,6 +78,44 @@
     .limit li { margin-bottom: .4rem; }
     pre code { white-space: pre; }
     h4.block-title { font-weight: 700; font-size: 1.15rem; margin: 2.2rem 0 .8rem; text-align: center; }
+
+    /* ---- dark theme for the whole page ---- */
+    body { background: #0a0f1c; color: #dfe6f3; }
+    .section { position: relative; }
+    .section.alt { background: radial-gradient(900px 500px at 85% 0%, rgba(47,109,246,.14) 0%, rgba(10,15,28,0) 60%), #0d1424 !important; }
+    .section.plain { background: radial-gradient(900px 500px at 10% 100%, rgba(124,58,237,.12) 0%, rgba(10,15,28,0) 60%), #0a0f1c !important; }
+    .section-title, .title, h4.block-title, .clip-head h4, .step h4 { color: #fff !important; }
+    .section-title { position: relative; display: inline-block; padding-bottom: .6rem; }
+    .section-title::after { content: ""; position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); width: 72px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--acc), var(--acc2)); }
+    .has-text-centered > .section-title { display: inline-block; }
+    .eyebrow { font-family: 'Google Sans', sans-serif; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: #9fc0ff; margin-bottom: .4rem; }
+    .lead { color: #b9c6e0; }
+    .content, .content p, .content li, .step p, .clip-cap, .note { color: #b9c6e0; }
+    .note { color: #8fa1c4; }
+    .content strong, .step strong, .clip-cap strong, .lead strong { color: #fff; }
+    .lead em { color: #cfe0ff; }
+    .figcard { background: #fff; border-radius: 12px; padding: 10px; display: inline-block; max-width: 100%; box-shadow: 0 16px 40px rgba(0,0,0,.45); }
+    .method-image { box-shadow: none; border-radius: 8px; }
+    .figcap { color: #8fa1c4; }
+    .step { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.10); backdrop-filter: blur(6px); transition: transform .15s, border-color .15s; }
+    .step:hover { transform: translateY(-2px); border-color: rgba(159,192,255,.45); }
+    .results-table { color: #dfe6f3; }
+    .results-table th, .results-table td { border-color: rgba(255,255,255,.12); }
+    .results-table th { background: rgba(255,255,255,.06); color: #fff; }
+    .results-table tr:nth-child(even) td { background: rgba(255,255,255,.02); }
+    .highlight-row td { background: rgba(47,109,246,.22) !important; color: #fff; }
+    .delta { color: #4ade80; } .neg { color: #f87171; }
+    .stat2 { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.10); }
+    .stat2 .num { background: linear-gradient(90deg, #9fc0ff, #c4b5fd); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .stat2 .lbl { color: #b9c6e0; } .stat2 .lbl strong { color: #fff; }
+    .jf { background: rgba(255,255,255,.08); color: #cfd8ea; } .jf b { color: #4ade80; }
+    .results-carousel .vid { box-shadow: 0 16px 40px rgba(0,0,0,.5); }
+    .slider-navigation-previous, .slider-navigation-next { background: rgba(20,26,40,.9); border: 1px solid rgba(255,255,255,.25); color: #fff; }
+    .slider-pagination .slider-page { background: rgba(255,255,255,.35); } .slider-pagination .slider-page.is-active { background: #9fc0ff; }
+    .limit li { color: #b9c6e0; } .limit strong { color: #fff; }
+    pre { background: rgba(255,255,255,.05) !important; color: #dfe6f3 !important; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; }
+    .footer { background: #070b14; color: #8fa1c4; } .footer a { color: #9fc0ff; }
+    .impact { background: linear-gradient(180deg, #0a0f1c 0%, #0d1424 100%); border-top: 1px solid rgba(255,255,255,.06); border-bottom: 1px solid rgba(255,255,255,.06); }
   </style>
 </head>
 <body>
@@ -132,22 +170,22 @@
   </div>
 </section>
 
-<section class="section" id="problem">
+<section class="section plain" id="problem">
   <div class="container is-max-desktop">
-    <h2 class="title is-3 section-title has-text-centered">The problem: propagation has no way to notice it is wrong</h2>
+    <div class="has-text-centered"><div class="eyebrow">01 · The problem</div><h2 class="title is-3 section-title">Propagation has no way to notice it is wrong</h2></div>
     <p class="lead">SAM-style trackers predict each frame from the current image and a memory of their own past predictions. That recursion is their strength and their weakness: once a wrong mask is written into memory, every later frame reads from it. Better memory design delays this; nothing in the loop detects or repairs it. The result is identity switches to look-alikes, missed reappearances, and false positives during occlusion.</p>
     <div class="content has-text-centered" style="margin-top: 1.2rem;">
-      <img src="./static/images/fig_teaser_cr.jpg" alt="Ground truth, SAM 3 and Dual-Agent on a sequence where SAM 3 fails" class="method-image">
+      <div class="figcard"><img src="./static/images/fig_teaser_cr.jpg" alt="Ground truth, SAM 3 and Dual-Agent on a sequence where SAM 3 fails" class="method-image"></div>
       <p class="figcap">Rows: ground truth, SAM 3, Dual-Agent. Once SAM 3 loses the target it does not come back on its own; Dual-Agent recovers it and tracking continues normally.</p>
     </div>
   </div>
 </section>
 
-<section class="section" style="background: #f7f8fb;" id="method">
+<section class="section alt" id="method">
   <div class="container is-max-desktop">
-    <h2 class="title is-3 section-title has-text-centered">The idea: verify, then recover</h2>
+    <div class="has-text-centered"><div class="eyebrow">02 · The idea</div><h2 class="title is-3 section-title">Verify, then recover</h2></div>
     <p class="lead">Keep the propagator frozen and add a thin control layer with two specialists. A <strong>verification agent</strong> decides <em>whether</em> the track is still the target. A <strong>correction agent</strong>, called only on a detected failure, decides <em>where</em> the target is. A committed correction re-prompts SAM 3, so propagation resumes from a clean state instead of a corrupted one.</p>
-    <div class="content has-text-centered"><img src="./static/images/pipeline_cr.jpg" alt="Overview of the Dual-Agent framework" class="method-image" style="max-width: 900px;"></div>
+    <div class="content has-text-centered"><div class="figcard"><img src="./static/images/pipeline_cr.jpg" alt="Overview of the Dual-Agent framework" class="method-image" style="max-width: 900px;"></div></div>
     <h4 class="block-title">One triggered frame, in four steps</h4>
     <div class="steps">
       <div class="step"><div class="n"></div><div><h4>Trigger</h4><p>Three cheap signals from SAM 3 decide when to look: polling during an occlusion, a delayed check after a reappearance, and an early warning when the tracker's own confidence turns unstable, which happens during identity swaps before any hard disappearance.</p></div></div>
@@ -159,9 +197,9 @@
   </div>
 </section>
 
-<section class="section" style="background: #f7f8fb;" id="videos">
+<section class="section plain" id="videos">
   <div class="container is-max-desktop">
-    <h2 class="title is-3 section-title has-text-centered">See it work</h2>
+    <div class="has-text-centered"><div class="eyebrow">03 · Videos</div><h2 class="title is-3 section-title">See it work</h2></div>
     <p class="lead">Left: SAM 3. Right: Dual-Agent. Green outline: ground truth. Each clip starts with both trackers on the object and runs through the moment they diverge. Drag the seek bar to any point; use the arrows to browse.</p>
     <h4 class="block-title">Scene cuts and reappearance (SecVOS)</h4>
     <p class="note has-text-centered" style="margin-bottom: .8rem;">Each cut resets the scene, so SAM 3's memory of the previous shot stops matching anything and its IoU falls to zero. Dual-Agent re-identifies the target in the new shot.</p>
@@ -209,9 +247,9 @@
   <div class="container is-max-desktop"><p class="note has-text-centered" style="margin-top: .5rem;">Per-object J&amp;F from the official evaluators. SecVOS clips come from the paper's run; LVOS-v2 clips from a re-run of the same recipe (89.3 J&amp;F overall vs. 89.4 in the paper).</p></div>
 </section>
 
-<section class="section" id="results">
+<section class="section alt" id="results">
   <div class="container is-max-desktop">
-    <h2 class="title is-3 section-title has-text-centered">Results</h2>
+    <div class="has-text-centered"><div class="eyebrow">04 · Results</div><h2 class="title is-3 section-title">Numbers</h2></div>
     <p class="lead">With the propagator frozen, Dual-Agent improves it on both VOS benchmarks, most where identity has to be re-established. The gain comes from 88 committed corrections over 160 SecVOS videos, with the verifier reaching only 4.8% of frames and 40 of 52 checkable commits improving on SAM 3. The same agents, unchanged, help other propagators and single-object trackers.</p>
 
     <h4 class="block-title">Video object segmentation</h4>
@@ -269,9 +307,9 @@
   </div>
 </section>
 
-<section class="section" style="background: #f7f8fb;" id="limitations">
+<section class="section plain" id="limitations">
   <div class="container is-max-desktop">
-    <h2 class="title is-3 section-title has-text-centered">Limitations</h2>
+    <div class="has-text-centered"><div class="eyebrow">05 · Limitations</div><h2 class="title is-3 section-title">What it does not do</h2></div>
     <div class="content limit" style="max-width: 860px; margin: 0 auto;">
       <ul>
         <li><strong>Only as good as the verifier.</strong> In ambiguous scenes it can miss a failure or override a correct track; 9 of 52 checkable commits on SecVOS did so.</li>
@@ -281,9 +319,9 @@
     </div>
   </section>
 
-<section class="section" id="bibtex">
+<section class="section alt" id="bibtex">
   <div class="container is-max-desktop content">
-    <h2 class="title is-3 section-title">BibTeX</h2>
+    <div class="eyebrow">Cite</div><h2 class="title is-3 section-title">BibTeX</h2>
     <pre><code>@inproceedings{bundele2026whentrackersfail,
   title     = {When Trackers Fail: VLM-Guided Verification and Recovery for Robust Video Object Segmentation},
   author    = {Bundele, Valay and Agrawal, Susmit and Hosseinzadeh, Mehran and Nguyen, The Nam and Lensch, Hendrik P. A.},
