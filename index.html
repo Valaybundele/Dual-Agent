@@ -83,7 +83,7 @@
 <body>
 
 <nav class="topnav"><div class="inner"><span class="brand">Dual-Agent · NeurIPS 2026</span>
-  <a class="nl" href="#problem">Problem</a><a class="nl" href="#method">Method</a><a class="nl" href="#training">Training</a><a class="nl" href="#videos">Videos</a><a class="nl" href="#results">Results</a><a class="nl" href="#limitations">Limitations</a><a class="nl" href="#bibtex">BibTeX</a></div></nav>
+  <a class="nl" href="#problem">Problem</a><a class="nl" href="#method">Method</a><a class="nl" href="#videos">Videos</a><a class="nl" href="#results">Results</a><a class="nl" href="#limitations">Limitations</a><a class="nl" href="#bibtex">BibTeX</a></div></nav>
 
 <section class="hero dark">
   <div class="hero-body">
@@ -135,12 +135,7 @@
 <section class="section" id="problem">
   <div class="container is-max-desktop">
     <h2 class="title is-3 section-title has-text-centered">The problem: propagation has no way to notice it is wrong</h2>
-    <p class="lead">SAM-style trackers predict each frame from the current image and a memory of their own past predictions. That recursion is their strength and their weakness: once a wrong mask is written into memory, every later frame reads from it. Better memory design delays this; nothing in the loop detects or repairs it.</p>
-    <div class="columns">
-      <div class="column is-4"><div class="failmode"><h4>Identity switch</h4><p>A look-alike passes close by and the mask jumps to it. The memory now describes the wrong object, so the track stays on it.</p></div></div>
-      <div class="column is-4"><div class="failmode"><h4>Missed reappearance</h4><p>The target leaves and comes back, after an occlusion or a scene cut. The tracker keeps predicting nothing, or a stale box.</p></div></div>
-      <div class="column is-4"><div class="failmode"><h4>False positive during occlusion</h4><p>While the target is hidden, the tracker fires on background or a distractor, and that mask is remembered as the target.</p></div></div>
-    </div>
+    <p class="lead">SAM-style trackers predict each frame from the current image and a memory of their own past predictions. That recursion is their strength and their weakness: once a wrong mask is written into memory, every later frame reads from it. Better memory design delays this; nothing in the loop detects or repairs it. The result is identity switches to look-alikes, missed reappearances, and false positives during occlusion.</p>
     <div class="content has-text-centered" style="margin-top: 1.2rem;">
       <img src="./static/images/fig_teaser_cr.jpg" alt="Ground truth, SAM 3 and Dual-Agent on a sequence where SAM 3 fails" class="method-image">
       <p class="figcap">Rows: ground truth, SAM 3, Dual-Agent. Once SAM 3 loses the target it does not come back on its own; Dual-Agent recovers it and tracking continues normally.</p>
@@ -153,53 +148,14 @@
     <h2 class="title is-3 section-title has-text-centered">The idea: verify, then recover</h2>
     <p class="lead">Keep the propagator frozen and add a thin control layer with two specialists. A <strong>verification agent</strong> decides <em>whether</em> the track is still the target. A <strong>correction agent</strong>, called only on a detected failure, decides <em>where</em> the target is. A committed correction re-prompts SAM 3, so propagation resumes from a clean state instead of a corrupted one.</p>
     <div class="content has-text-centered"><img src="./static/images/pipeline_cr.jpg" alt="Overview of the Dual-Agent framework" class="method-image" style="max-width: 900px;"></div>
-    <h4 class="block-title">One triggered frame, step by step</h4>
+    <h4 class="block-title">One triggered frame, in four steps</h4>
     <div class="steps">
-      <div class="step"><div class="n"></div><div><h4>Trigger: look only when something is off</h4><p>Three cheap signals from SAM 3 itself decide when the agents run: polling every few frames during an <strong>occlusion</strong>, a delayed check after a <strong>reappearance</strong>, and an <strong>early-warning</strong> trigger that fires when the tracker's own confidence becomes unstable over a short window, which happens during identity swaps and distractor attraction before any hard disappearance. Thresholds are calibrated once on a held-out SA-V shard and never tuned on the benchmarks.</p></div></div>
-      <div class="step"><div class="n"></div><div><h4>Short-circuit: if SAM 3 is confident, trust it</h4><p>At a triggered frame the propagated prediction is accepted directly when SAM 3's confidence is high. Reasoning is spent only in the uncertain regime where memory corruption is likely.</p></div></div>
-      <div class="step"><div class="n"></div><div><h4>Verify: a VLM judges the track from the tracker's own history</h4><p>The verifier (Qwen3-VL-8B-Thinking, zero-shot) sees a seven-image prompt: two early <strong>exemplars</strong> with ground-truth boxes in green, two uniformly sampled and two recent context frames with the <strong>tracker's own boxes in red</strong>, and the query frame. The context is the possibly corrupted trajectory the deployed tracker produced, not an oracle one. The prompt asks the model to first locate the target itself and only then judge the red box, which promotes identity-level reasoning over local box checking. Three votes on shifted query points (stride 4) are majority-pooled.</p></div></div>
-      <div class="step"><div class="n"></div><div><h4>Correct: a fine-tuned VLM relocalizes the target</h4><p>Only when the verifier says "wrong", the corrector (Qwen3-VL-4B-Instruct, LoRA fine-tuned) receives the same prompt and answers a visibility flag plus a box. Up to three rounds: the verifier re-checks the proposed box and, if rejected, the corrector tries again with the rejected box as extra context.</p></div></div>
-      <div class="step"><div class="n"></div><div><h4>Commit: rewrite memory only when it matters</h4><p>A correction overwrites SAM 3's state only if it differs substantially from the current hypothesis (box IoU &lt; 0.5) or declares the target absent. SAM 3 is then re-prompted at that frame. One wrong commit can pollute many future frames; one right reset recovers a long segment after drift. This asymmetry is why triggering is sparse and commitment is conservative.</p></div></div>
+      <div class="step"><div class="n"></div><div><h4>Trigger</h4><p>Three cheap signals from SAM 3 decide when to look: polling during an occlusion, a delayed check after a reappearance, and an early warning when the tracker's own confidence turns unstable, which happens during identity swaps before any hard disappearance.</p></div></div>
+      <div class="step"><div class="n"></div><div><h4>Verify</h4><p>A zero-shot VLM (Qwen3-VL-8B-Thinking) sees two trusted exemplars, four context frames with the tracker's own possibly wrong boxes, and the query frame. It first locates the target itself, then judges whether the tracker's box is on it. Three votes are pooled.</p></div></div>
+      <div class="step"><div class="n"></div><div><h4>Correct</h4><p>Only on a detected failure, a lighter fine-tuned VLM (Qwen3-VL-4B-Instruct) relocalizes the target or declares it absent, with up to three verifier-checked rounds.</p></div></div>
+      <div class="step"><div class="n"></div><div><h4>Commit</h4><p>The correction overwrites SAM 3's memory only if it differs substantially from the current hypothesis. SAM 3 is re-prompted and propagation resumes from a clean state. One wrong commit pollutes many frames; one right reset recovers a long segment, so triggering is sparse and commitment is conservative.</p></div></div>
     </div>
-    <h4 class="block-title">Four design decisions behind it</h4>
-    <div class="columns is-multiline">
-      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-code-branch"></i></span>Asymmetric decomposition</h3><p>Deciding <em>whether</em> the track is wrong and <em>where</em> the target is are different tasks. The verifier is tuned for precision in deciding to intervene; the lighter corrector is tuned for accuracy in localization.</p></div></div>
-      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-eye"></i></span>Tracker-aware reasoning interface</h3><p>The verifier reasons over the trajectory the tracker actually produced, trusted exemplars plus possibly corrupted context. Clean oracle context would be an easier problem than the one faced at inference.</p></div></div>
-      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-shield-alt"></i></span>State-safe intervention</h3><p>Sparse triggers decide when to look; a confidence short-circuit and a commit gate decide whether a correction may rewrite the tracker's memory.</p></div></div>
-      <div class="column is-6"><div class="box contrib"><h3 class="title is-5"><span class="icon"><i class="fas fa-random"></i></span>Failure-oriented supervision</h3><p>The corrector is trained on failures mined from real SAM 3 runs, plus identity-switch and distractor perturbations that reproduce the ambiguities that make propagators fail.</p></div></div>
-    </div>
-  </div>
-</section>
-
-<section class="section" id="training">
-  <div class="container is-max-desktop">
-    <h2 class="title is-3 section-title has-text-centered">Trained on real failures</h2>
-    <p class="lead">Supervision must match the failure distribution the corrector will see at test time, so the training data comes from SAM 3's own trajectories, not from oracle tracks.</p>
-    <div class="columns">
-      <div class="column is-7">
-        <div class="content">
-          <ul>
-            <li><strong>Mine failures from SAM 3.</strong> SAM 3 is run on SA-V shards sav_000 to sav_005 (5,145 sequences, 16,045 objects) from each object's first-appearance mask. Every annotated frame records the prediction, its confidence, its IoU to ground truth, and a set of visually similar distractor candidates.</li>
-            <li><strong>Sample where it goes wrong.</strong> Query frames oversample disagreement with ground truth and keep a small share of high-IoU frames. Each query is rendered as the same seven-image prompt used at test time, with the target visibility and ground-truth box as the answer.</li>
-            <li><strong>Inject identity ambiguity.</strong> With some probability, one or two recent context boxes, sometimes the query box too, are replaced by mined distractor boxes from the same frame. The corrector learns to reason about identity across time instead of trusting local appearance.</li>
-            <li><strong>Corpus.</strong> 79,457 samples, split by sequence into 75,341 train and 4,116 validation. The corrector is a Qwen3-VL-4B-Instruct backbone fine-tuned with LoRA on structured JSON answers.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="column is-5">
-        <h4 class="title is-6 has-text-centered">Corrector alone, on held-out validation queries</h4>
-        <table class="results-table">
-          <thead><tr><th>SAM 3 state at the query</th><th>SAM 3 IoU</th><th>Corrector IoU</th><th>Wins / losses</th></tr></thead>
-          <tbody>
-            <tr><td>Lost target (IoU &lt; 0.1)</td><td>0.024</td><td><strong>0.612</strong> <span class="delta">+0.59</span></td><td>270 / 11</td></tr>
-            <tr><td>Severe drift (0.1 to 0.4)</td><td>0.224</td><td><strong>0.727</strong> <span class="delta">+0.50</span></td><td>688 / 76</td></tr>
-            <tr><td>Drift (0.4 to 0.7)</td><td>0.492</td><td><strong>0.734</strong> <span class="delta">+0.24</span></td><td>120 / 16</td></tr>
-            <tr><td>Already good (≥ 0.7)</td><td><strong>0.955</strong></td><td>0.912 <span class="neg">−0.04</span></td><td>9 / 40</td></tr>
-          </tbody>
-        </table>
-        <div class="takeaway"><strong>Why the verifier exists.</strong> The corrector is excellent exactly where SAM 3 has failed and slightly harmful where SAM 3 is already right. Something has to decide when to call it.</div>
-      </div>
-    </div>
+    <p class="note has-text-centered" style="margin-top: 1rem;">The corrector is trained on failures mined from SAM 3's own runs on SA-V (79k samples), with identity-switch perturbations that reproduce the ambiguities that make propagators fail. On held-out queries it recovers +0.59 IoU where SAM 3 lost the target and slightly hurts where SAM 3 was already right, which is exactly why the verifier decides when to call it.</p>
   </div>
 </section>
 
@@ -256,9 +212,9 @@
 <section class="section" id="results">
   <div class="container is-max-desktop">
     <h2 class="title is-3 section-title has-text-centered">Results</h2>
-    <p class="lead">Three questions. Does Dual-Agent improve a strong frozen propagator? Where does the gain come from? Does it depend on SAM 3?</p>
+    <p class="lead">With the propagator frozen, Dual-Agent improves it on both VOS benchmarks, most where identity has to be re-established. The gain comes from 88 committed corrections over 160 SecVOS videos, with the verifier reaching only 4.8% of frames and 40 of 52 checkable commits improving on SAM 3. The same agents, unchanged, help other propagators and single-object trackers.</p>
 
-    <h4 class="block-title">1. It improves SAM 3 on both VOS benchmarks, most where identity must be re-established</h4>
+    <h4 class="block-title">Video object segmentation</h4>
     <div class="columns">
       <div class="column is-6">
         <h4 class="title is-6 has-text-centered">LVOS-v2 validation</h4>
@@ -293,67 +249,13 @@
       </div>
     </div>
 
-    <h4 class="block-title">2. The gain comes from a few well-placed rescues, not from rewriting the tracker</h4>
+    <h4 class="block-title">Transfer to other propagators, no retraining (SecVOS J&amp;F)</h4>
     <div class="columns is-multiline is-centered">
-      <div class="column is-3"><div class="stat2"><div class="num">1360</div><div class="lbl">verifier calls over 160 SecVOS videos, 4.8% of unique frames</div></div></div>
-      <div class="column is-3"><div class="stat2"><div class="num">240 → 88</div><div class="lbl">corrector calls → committed corrections</div></div></div>
-      <div class="column is-3"><div class="stat2"><div class="num">40 / 11 / 1</div><div class="lbl">verifiable commits better / worse / neutral than SAM 3 (76.9% precision)</div></div></div>
-      <div class="column is-3"><div class="stat2"><div class="num">76.8%</div><div class="lbl">verifier precision at 60.0% recall on 502 checkable decisions: a precision-first operating point</div></div></div>
-    </div>
-    <div class="columns" style="margin-top: .5rem;">
-      <div class="column is-6">
-        <h4 class="title is-6 has-text-centered">What SAM 3 was doing when a correction was committed</h4>
-        <table class="results-table">
-          <thead><tr><th>SAM 3 state at commit</th><th>Commits</th><th>SAM 3 IoU</th><th>After commit</th></tr></thead>
-          <tbody>
-            <tr class="highlight-row"><td>Target lost</td><td>39</td><td>0.000</td><td><strong>0.856</strong></td></tr>
-            <tr><td>Drifted</td><td>4</td><td>0.283</td><td>0.476</td></tr>
-            <tr><td>Was already right</td><td>9</td><td>0.926</td><td><span class="neg">0.049</span></td></tr>
-            <tr><td>No ground-truth box at that frame</td><td>36</td><td>—</td><td>—</td></tr>
-          </tbody>
-        </table>
-        <p class="note has-text-centered">The dominant positive case is a lost target restored to a high-IoU state; the dominant negative case is an unnecessary override of a correct track.</p>
-      </div>
-      <div class="column is-6">
-        <h4 class="title is-6 has-text-centered">Which trigger fired, and how the commits turned out</h4>
-        <table class="results-table">
-          <thead><tr><th>Trigger</th><th>Verifier</th><th>Corrector</th><th>Commits</th><th>Better / worse / neutral</th></tr></thead>
-          <tbody>
-            <tr><td>Confidence-variance early warning</td><td>713</td><td>120</td><td>53</td><td>23 / 6 / 1</td></tr>
-            <tr><td>Occlusion polling</td><td>508</td><td>105</td><td>26</td><td>17 / 2 / 0</td></tr>
-            <tr><td>Reappearance</td><td>139</td><td>15</td><td>9</td><td>0 / 3 / 0</td></tr>
-            <tr class="highlight-row"><td><strong>All</strong></td><td><strong>1360</strong></td><td><strong>240</strong></td><td><strong>88</strong></td><td><strong>40 / 11 / 1</strong></td></tr>
-          </tbody>
-        </table>
-        <p class="note has-text-centered">Outcomes counted on the 52 commits that land on an annotated frame. The early-warning trigger does most of the useful work.</p>
-      </div>
-    </div>
-
-    <h4 class="block-title">3. Every part of the controller is load-bearing</h4>
-    <div class="columns">
-      <div class="column is-4">
-        <table class="results-table"><thead><tr><th>Trigger set (SecVOS)</th><th>J&amp;F</th></tr></thead>
-          <tbody><tr><td>Occlusion only</td><td>75.4</td></tr><tr><td>+ reappearance</td><td>75.6</td></tr><tr class="highlight-row"><td><strong>+ confidence variance</strong></td><td><strong>76.9</strong></td></tr></tbody></table>
-        <p class="note has-text-centered">Drift sensing drives the recovery volume.</p>
-      </div>
-      <div class="column is-4">
-        <table class="results-table"><thead><tr><th>Correction rounds</th><th>J&amp;F</th></tr></thead>
-          <tbody><tr><td>1 round</td><td>75.6</td></tr><tr class="highlight-row"><td><strong>3 rounds</strong></td><td><strong>76.9</strong></td></tr></tbody></table>
-        <p class="note has-text-centered">Detecting a failure is not enough unless the corrector can resolve it.</p>
-      </div>
-      <div class="column is-4">
-        <table class="results-table"><thead><tr><th>Configuration</th><th>SecVOS</th><th>LVOS-v2</th></tr></thead>
-          <tbody><tr><td>SAM 3</td><td>74.2</td><td>88.2</td></tr><tr><td>No verifier</td><td>74.1</td><td>—</td></tr><tr><td>No commit gate</td><td>75.9</td><td>89.3</td></tr><tr class="highlight-row"><td><strong>Full</strong></td><td><strong>76.9</strong></td><td><strong>89.4</strong></td></tr></tbody></table>
-        <p class="note has-text-centered">Without the verifier the system falls back to SAM 3: the gain is not conservative acceptance.</p>
-      </div>
-    </div>
-
-    <h4 class="block-title">4. It is not tied to SAM 3, and it carries over to single-object tracking</h4>
-    <div class="columns is-multiline is-centered">
-      <div class="column is-4"><div class="stat2"><div class="num">52.3 → 59.2</div><div class="lbl">SecVOS J&amp;F with <strong>Cutie</strong> as the propagator, agents unchanged</div></div></div>
+      <div class="column is-4"><div class="stat2"><div class="num">52.3 → 59.2</div><div class="lbl"><strong>Cutie</strong> as the propagator</div></div></div>
       <div class="column is-4"><div class="stat2"><div class="num">58.4 → 65.1</div><div class="lbl">with <strong>SAM 2.1</strong></div></div></div>
       <div class="column is-4"><div class="stat2"><div class="num">69.9 → 72.0</div><div class="lbl">with <strong>SeC</strong></div></div></div>
     </div>
+    <h4 class="block-title">Single-object tracking benchmarks</h4>
     <div class="columns">
       <div class="column is-4"><table class="results-table"><thead><tr><th>LaSOT-ext</th><th>AUC</th><th>P</th><th>P<sub>norm</sub></th></tr></thead>
         <tbody><tr><td>SAM 3</td><td>63.7</td><td>74.8</td><td>72.9</td></tr><tr class="highlight-row"><td><strong>Dual-Agent</strong>†</td><td><strong>64.3</strong></td><td><strong>75.5</strong></td><td><strong>73.5</strong></td></tr></tbody></table></div>
@@ -364,19 +266,6 @@
     </div>
     <p class="note has-text-centered">Box-initialized single-object tracking. † LaSOT-ext uses a size-selected composite; protocols are in the paper's appendix.</p>
 
-    <h4 class="block-title">5. What it costs</h4>
-    <div class="columns is-centered"><div class="column is-8">
-      <table class="results-table">
-        <thead><tr><th>Per SecVOS video, one H100</th><th>Seconds</th><th>PFLOP</th><th>J&amp;F</th></tr></thead>
-        <tbody>
-          <tr><td>SAM 3</td><td>12.2</td><td>1.38</td><td>74.2</td></tr>
-          <tr class="highlight-row"><td><strong>Dual-Agent, bf16</strong></td><td>71.8</td><td>2.22</td><td><strong>76.9</strong></td></tr>
-          <tr><td>Dual-Agent, FP8 verifier</td><td>56.2</td><td>2.22</td><td>76.8</td></tr>
-          <tr><td>FP8, occlusion poll every 24 frames</td><td>47.7</td><td>2.01</td><td>76.4</td></tr>
-        </tbody>
-      </table>
-      <p class="note has-text-centered">Verification frequency and precision trade compute for accuracy. The system is not real-time.</p>
-    </div></div>
   </div>
 </section>
 
@@ -385,14 +274,12 @@
     <h2 class="title is-3 section-title has-text-centered">Limitations</h2>
     <div class="content limit" style="max-width: 860px; margin: 0 auto;">
       <ul>
-        <li><strong>It is only as good as the verifier.</strong> In highly ambiguous scenes the verifier can miss a failure or trigger an unnecessary correction; 9 of the 52 checkable commits on SecVOS overrode a track that was already right, and the seen-class scores on LVOS-v2 dip slightly for the same reason.</li>
-        <li><strong>Not real-time.</strong> Verification adds a VLM call at triggered frames; the full system is about six times slower than SAM 3 per video on an H100, and about four times with FP8 and sparser polling.</li>
-        <li><strong>Protocol caveats.</strong> The LaSOT-ext result is a size-selected composite rather than an unrestricted online policy, and VOT-LT trades some precision for recall.</li>
-        <li><strong>Unverified scope.</strong> Transfer to specialised domains, and video-level disjointness between the benchmarks and the VLMs' pretraining data, have not been established.</li>
+        <li><strong>Only as good as the verifier.</strong> In ambiguous scenes it can miss a failure or override a correct track; 9 of 52 checkable commits on SecVOS did so.</li>
+        <li><strong>Not real-time.</strong> About 72 s per SecVOS video on one H100 versus 12 s for SAM 3; FP8 verification and sparser polling bring it to 48 s at 76.4 J&amp;F.</li>
+        <li><strong>Protocol caveats.</strong> LaSOT-ext is a size-selected composite; on VOT-LT recall rises while precision drops.</li>
       </ul>
     </div>
-  </div>
-</section>
+  </section>
 
 <section class="section" id="bibtex">
   <div class="container is-max-desktop content">
