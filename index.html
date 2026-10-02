@@ -58,7 +58,7 @@
     .failmode { border-left: 4px solid var(--sam); background: #fff5f5; border-radius: 8px; padding: .8rem 1rem; height: 100%; }
     .failmode h4 { margin: 0 0 .25rem; font-weight: 700; } .failmode p { margin: 0; font-size: .95rem; color: #3a4150; }
     .results-table { margin: 0 auto; border-collapse: collapse; font-size: .95rem; width: 100%; }
-    .results-table th, .results-table td { padding: .5rem .75rem; border: 1px solid #e3e6ee; text-align: center; }
+    .results-table th, .results-table td { padding: .5rem .55rem; border: 1px solid #e3e6ee; text-align: center; }
     .results-table th { background: #f3f5fa; font-weight: 600; }
     .results-table td:first-child { text-align: left; }
     .highlight-row { background: #e9f0ff; }
@@ -286,12 +286,20 @@
       </div>
     </div>
 
-    <h4 class="block-title">The same agents, unchanged, on other propagators (SecVOS J&amp;F)</h4>
-    <div class="columns is-multiline is-centered">
-      <div class="column is-4"><div class="stat2"><div class="num">52.3 → 59.2</div><div class="lbl"><strong>Cutie</strong></div></div></div>
-      <div class="column is-4"><div class="stat2"><div class="num">58.4 → 65.1</div><div class="lbl"><strong>SAM 2.1</strong></div></div></div>
-      <div class="column is-4"><div class="stat2"><div class="num">69.9 → 72.0</div><div class="lbl"><strong>SeC</strong></div></div></div>
-    </div>
+    <h4 class="block-title">The same agents, unchanged, on other propagators (SecVOS-160 J&amp;F)</h4>
+    <table class="results-table">
+      <thead>
+        <tr><th rowspan="2">Propagator</th><th colspan="2">Overall</th><th colspan="2">No scene change</th><th colspan="2">Single change</th><th colspan="2">Multiple changes</th></tr>
+        <tr><th>alone</th><th>+ Dual-Agent</th><th>alone</th><th>+ Dual-Agent</th><th>alone</th><th>+ Dual-Agent</th><th>alone</th><th>+ Dual-Agent</th></tr>
+      </thead>
+      <tbody>
+<tr><td>Cutie</td><td>52.3</td><td><strong>59.2</strong> <span class="delta">+6.9</span></td><td>72.5</td><td><strong>75.9</strong> <span class="delta">+3.4</span></td><td>53.2</td><td><strong>59.5</strong> <span class="delta">+6.3</span></td><td>47.4</td><td><strong>56.6</strong> <span class="delta">+9.2</span></td></tr>
+<tr><td>SAM 2.1</td><td>58.4</td><td><strong>65.1</strong> <span class="delta">+6.7</span></td><td>79.4</td><td><strong>83.4</strong> <span class="delta">+4.0</span></td><td>58.5</td><td><strong>61.6</strong> <span class="delta">+3.1</span></td><td>52.4</td><td><strong>61.3</strong> <span class="delta">+8.9</span></td></tr>
+<tr><td>SeC</td><td>69.9</td><td><strong>72.0</strong> <span class="delta">+2.1</span></td><td>84.1</td><td><strong>84.6</strong> <span class="delta">+0.5</span></td><td>69.7</td><td><strong>72.2</strong> <span class="delta">+2.5</span></td><td>67.3</td><td><strong>70.5</strong> <span class="delta">+3.2</span></td></tr>
+<tr class="highlight-row"><td>SAM 3</td><td>74.2</td><td><strong>76.9</strong> <span class="delta">+2.7</span></td><td>87.1</td><td><strong>88.1</strong> <span class="delta">+1.0</span></td><td>74.6</td><td><strong>76.2</strong> <span class="delta">+1.6</span></td><td>69.3</td><td><strong>73.4</strong> <span class="delta">+4.1</span></td></tr>
+      </tbody>
+    </table>
+    <p class="note has-text-centered">No component is retrained; only the propagator is replaced. Gains are largest on the weaker propagators and after multiple scene changes. Cutie exposes no confidence signal, so only occlusion polling is used for it.</p>
 
     <h4 class="block-title">And on long-term single-object tracking</h4>
     <div class="columns">
