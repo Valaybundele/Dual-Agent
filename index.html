@@ -155,7 +155,7 @@
           <source src="./static/videos/secvos_car_shots.mp4" type="video/mp4">
         </video>
         <p class="teaser-caption">Same video, same frozen SAM 3. Each shot change breaks SAM 3's track (left, IoU 0.00). Dual-Agent detects the failure and re-identifies the car in every new shot (right). The bar under each panel is the per-frame IoU: green correct, red wrong.</p>
-        <div class="has-text-centered"><div class="legend"><span class="l-sam">SAM 3</span><span class="l-ours">Dual-Agent (ours)</span><span class="l-gt">ground truth</span></div></div>
+        <div class="has-text-centered"><div class="legend"><span class="l-sam">SAM 3</span><span class="l-ours">Dual-Agent</span><span class="l-gt">ground truth</span></div></div>
       </div>
     </div>
   </div>
@@ -263,7 +263,7 @@
             <tr><td>SAM2.1Long</td><td>85.9</td><td>81.7</td><td>88.6</td><td>83.0</td><td>90.5</td></tr>
             <tr><td>SeC</td><td>86.5</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             <tr><td>SAM 3</td><td>88.2</td><td><strong>85.4</strong></td><td><strong>92.9</strong></td><td>83.3</td><td>91.5</td></tr>
-            <tr class="highlight-row"><td><strong>Dual-Agent (ours)</strong></td><td><strong>89.4</strong> <span class="delta">+1.2</span></td><td>84.9</td><td>92.7</td><td><strong>85.8</strong></td><td><strong>94.1</strong></td></tr>
+            <tr class="highlight-row"><td><strong>Dual-Agent</strong></td><td><strong>89.4</strong> <span class="delta">+1.2</span></td><td>84.9</td><td>92.7</td><td><strong>85.8</strong></td><td><strong>94.1</strong></td></tr>
           </tbody>
         </table>
         <p class="note has-text-centered">s / u: seen / unseen object classes.</p>
@@ -279,7 +279,7 @@
             <tr><td>SAM2.1Long</td><td>81.3</td><td>61.8</td><td>58.5</td><td>62.3</td></tr>
             <tr><td>SeC</td><td>84.2</td><td>69.6</td><td>67.5</td><td>70.0</td></tr>
             <tr><td>SAM 3</td><td>87.1</td><td>74.6</td><td>69.3</td><td>74.2</td></tr>
-            <tr class="highlight-row"><td><strong>Dual-Agent (ours)</strong></td><td><strong>88.1</strong> <span class="delta">+1.0</span></td><td><strong>76.2</strong> <span class="delta">+1.6</span></td><td><strong>73.4</strong> <span class="delta">+4.1</span></td><td><strong>76.9</strong> <span class="delta">+2.7</span></td></tr>
+            <tr class="highlight-row"><td><strong>Dual-Agent</strong></td><td><strong>88.1</strong> <span class="delta">+1.0</span></td><td><strong>76.2</strong> <span class="delta">+1.6</span></td><td><strong>73.4</strong> <span class="delta">+4.1</span></td><td><strong>76.9</strong> <span class="delta">+2.7</span></td></tr>
           </tbody>
         </table>
         <p class="note has-text-centered">Scene-stratified protocol of SeC.</p>
@@ -315,7 +315,7 @@
     <h4 class="block-title">Limitations</h4>
     <div class="content limit" style="max-width: 860px; margin: 0 auto;">
       <ul>
-        <li>The system is only as reliable as its verifier: 9 of 52 checkable commits on SecVOS overrode a correct track.</li>
+        <li>Dual-Agent is only as reliable as its verifier: 9 of 52 checkable commits on SecVOS overrode a correct track.</li>
         <li>It is not real-time: about 72 s per SecVOS video on one H100 against 12 s for SAM 3; FP8 verification and sparser polling bring this to 48 s at 76.4 J&amp;F.</li>
         <li>LaSOT-ext uses a size-selected composite; on VOT-LT recall rises while precision drops.</li>
       </ul>
