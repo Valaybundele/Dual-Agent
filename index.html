@@ -104,10 +104,11 @@
 
 <section class="impact">
   <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-4"><div class="stat"><div class="num">+2.7</div><div class="lbl">J&amp;F on SeCVOS</div><div class="sub">74.2 → 76.9, largest gain on multi-scene-change videos</div></div></div>
-      <div class="column is-4"><div class="stat"><div class="num">+1.2</div><div class="lbl">J&amp;F on LVOS-v2</div><div class="sub">88.2 → 89.4, best unseen-object scores in the table</div></div></div>
-      <div class="column is-4"><div class="stat"><div class="num">4.8%</div><div class="lbl">of frames ever reach the verifier</div><div class="sub">88 committed corrections across 160 SeCVOS videos</div></div></div>
+    <div class="columns is-centered is-multiline">
+      <div class="column is-3"><div class="stat"><div class="num">+2.7</div><div class="lbl">J&amp;F on SeCVOS</div><div class="sub">74.2 → 76.9, largest gain on multi-scene-change videos</div></div></div>
+      <div class="column is-3"><div class="stat"><div class="num">+1.2</div><div class="lbl">J&amp;F on LVOS-v2</div><div class="sub">88.2 → 89.4, best unseen-object scores in the table</div></div></div>
+      <div class="column is-3"><div class="stat"><div class="num">+6.9</div><div class="lbl">J&amp;F on Cutie, no retraining</div><div class="sub">also +6.7 on SAM2.1 and +2.1 on SeC</div></div></div>
+      <div class="column is-3"><div class="stat"><div class="num">4.8%</div><div class="lbl">of frames ever reach the verifier</div><div class="sub">88 committed corrections across 160 SeCVOS videos</div></div></div>
     </div>
   </div>
 </section>
@@ -118,8 +119,8 @@
       <div class="column is-four-fifths">
         <h2 class="title is-3 section-title">Abstract</h2>
         <div class="content has-text-justified">
-          <p>Segmentation-based trackers built on foundation models such as SAM propagate masks through a memory of past predictions. The memory is what makes them strong, and what makes them brittle: under occlusion, reappearance and look-alike distractors, errors enter the memory and compound, and the tracker keeps producing confident masks of the wrong object or of nothing at all. Prior work improves the propagator; it still assumes its own predictions can be trusted.</p>
-          <p>We propose a <strong>failure-aware tracking framework</strong> that keeps SAM 3 frozen and adds explicit reasoning and selective recovery on top. A vision-language <strong>verification agent</strong> reasons over spatio-temporal context to decide whether the current track is still the target, catching identity switches, missed recoveries and distractor-induced drift. Only when it flags a failure is a <strong>correction agent</strong> activated to relocalize the target, and a commit gate decides whether the correction may overwrite the tracker's memory. Targeted training perturbations teach the corrector the exact ambiguities that make propagators fail. The result turns tracking from a purely propagation-based process into a <strong>self-correcting system</strong>: with SAM 3 untouched, it improves <strong>LVOS-v2</strong> by <strong>+1.2</strong> and <strong>SeCVOS</strong> by <strong>+2.7 J&amp;F</strong>, intervening on fewer than 5% of frames.</p>
+          <p>Recent trackers built on foundation models such as the Segment Anything Model (SAM) achieve strong performance by propagating object masks through memory. This strength is also a key source of failure: under occlusion, reappearance or distractors, an incorrect prediction can enter the tracking loop and be propagated over time, resulting in persistent identity drift. Existing approaches seek to prevent such failures through improved memory and temporal modeling, but once a failure occurs the tracker has no explicit mechanism to recognize or correct it.</p>
+          <p>We address this gap with <strong>Dual-Agent</strong>, a failure-aware tracking framework that complements propagation with explicit verification and recovery. A vision-language <strong>verification agent</strong> first reasons over spatio-temporal context to determine whether the tracker is still following the target. When a failure is detected, a <strong>correction agent</strong> uses temporal context to recover the target before tracking continues. The correction agent is trained on real SAM3 failures, augmented with targeted identity-switch and distractor perturbations that expose it to challenging ambiguities during recovery. On <strong>LVOS-v2</strong> and <strong>SecVOS</strong>, Dual-Agent improves SAM3 by <strong>1.2</strong> and <strong>2.7 J&amp;F</strong>. The framework transfers without retraining to <strong>SAM2.1, SeC and Cutie</strong>, and to long-term tracking benchmarks including <strong>LaSOT-ext, TNL2K and VOT-LT2022</strong>. Explicitly reasoning about when tracking fails and how to recover is a complementary path to robust tracking beyond improving propagation alone.</p>
         </div>
       </div>
     </div>
@@ -237,6 +238,56 @@
       <div class="column is-3"><div class="stat2"><div class="num">76.9%</div><div class="lbl">of verifiable commits improve over SAM 3 (40 better, 11 worse, 1 neutral)</div></div></div>
       <div class="column is-3"><div class="stat2"><div class="num">+0.59</div><div class="lbl">IoU recovered by the corrector once SAM 3 has lost the target</div></div></div>
     </div>
+
+    <h4 class="title is-5 has-text-centered" style="margin-top: 2.5rem;">Both agents matter, and the gain is not just caution</h4>
+    <div class="columns">
+      <div class="column is-6">
+        <table class="results-table">
+          <thead><tr><th>Configuration</th><th>SeCVOS J&amp;F</th><th>LVOS-v2 J&amp;F</th></tr></thead>
+          <tbody>
+            <tr><td>SAM 3</td><td>74.2</td><td>88.2</td></tr>
+            <tr><td>No verifier (commit gate only)</td><td>74.1</td><td>—</td></tr>
+            <tr><td>No commit gate</td><td>75.9</td><td>89.3</td></tr>
+            <tr class="highlight-row"><td><strong>Dual-Agent (full)</strong></td><td><strong>76.9</strong></td><td><strong>89.4</strong></td></tr>
+          </tbody>
+        </table>
+        <p class="note has-text-centered">Without the verifier the system falls back to the SAM 3 baseline; without the commit gate most of the gain survives.</p>
+      </div>
+      <div class="column is-6">
+        <table class="results-table">
+          <thead><tr><th>Cost on one H100, per SeCVOS video</th><th>Seconds</th><th>J&amp;F</th></tr></thead>
+          <tbody>
+            <tr><td>SAM 3</td><td>12.2</td><td>74.2</td></tr>
+            <tr class="highlight-row"><td><strong>Dual-Agent, bf16</strong></td><td>71.8</td><td><strong>76.9</strong></td></tr>
+            <tr><td>Dual-Agent, FP8 verifier</td><td>56.2</td><td>76.8</td></tr>
+            <tr><td>FP8, occlusion poll every 24 frames</td><td>47.7</td><td>76.4</td></tr>
+          </tbody>
+        </table>
+        <p class="note has-text-centered">Verification frequency and precision trade compute for accuracy; the system is not real-time.</p>
+      </div>
+    </div>
+
+    <h4 class="title is-5 has-text-centered" style="margin-top: 2.5rem;">The same agents, unchanged, on other trackers and on single-object tracking</h4>
+    <div class="columns is-multiline is-centered">
+      <div class="column is-4"><div class="stat2"><div class="num">52.3 → 59.2</div><div class="lbl">SeCVOS J&amp;F with <strong>Cutie</strong> as the propagator</div></div></div>
+      <div class="column is-4"><div class="stat2"><div class="num">58.4 → 65.1</div><div class="lbl">with <strong>SAM 2.1</strong></div></div></div>
+      <div class="column is-4"><div class="stat2"><div class="num">69.9 → 72.0</div><div class="lbl">with <strong>SeC</strong></div></div></div>
+    </div>
+    <div class="columns">
+      <div class="column is-4">
+        <table class="results-table"><thead><tr><th>LaSOT-ext</th><th>AUC</th><th>P</th><th>P<sub>norm</sub></th></tr></thead>
+          <tbody><tr><td>SAM 3</td><td>63.7</td><td>74.8</td><td>72.9</td></tr><tr class="highlight-row"><td><strong>Dual-Agent</strong>†</td><td><strong>64.3</strong></td><td><strong>75.5</strong></td><td><strong>73.5</strong></td></tr></tbody></table>
+      </div>
+      <div class="column is-4">
+        <table class="results-table"><thead><tr><th>TNL2K</th><th>AUC</th><th>P</th><th>P<sub>norm</sub></th></tr></thead>
+          <tbody><tr><td>SAM 3</td><td>65.2</td><td>72.8</td><td>74.3</td></tr><tr class="highlight-row"><td><strong>Dual-Agent</strong></td><td><strong>66.5</strong></td><td><strong>74.1</strong></td><td><strong>75.7</strong></td></tr></tbody></table>
+      </div>
+      <div class="column is-4">
+        <table class="results-table"><thead><tr><th>VOT-LT2022</th><th>Pr</th><th>Re</th><th>F</th></tr></thead>
+          <tbody><tr><td>SAM 3</td><td><strong>0.632</strong></td><td>0.574</td><td>0.601</td></tr><tr class="highlight-row"><td><strong>Dual-Agent</strong></td><td>0.610</td><td><strong>0.613</strong></td><td><strong>0.612</strong></td></tr></tbody></table>
+      </div>
+    </div>
+    <p class="note has-text-centered">Box-initialized single-object tracking. † LaSOT-ext uses a size-selected composite; see the paper's appendix for protocols.</p>
   </div>
 </section>
 
