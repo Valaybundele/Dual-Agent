@@ -123,7 +123,7 @@
 <body>
 
 <nav class="topnav"><div class="inner"><span class="brand">Dual-Agent · NeurIPS 2026</span>
-  <a class="nl" href="#why">Why</a><a class="nl" href="#how">How</a><a class="nl" href="#inside">Inside</a><a class="nl" href="#videos">Videos</a><a class="nl" href="#results">Results</a><a class="nl" href="#bibtex">BibTeX</a></div></nav>
+  <a class="nl" href="#why">Why</a><a class="nl" href="#how">How</a><a class="nl" href="#inside">Inside</a><a class="nl" href="#videos">Videos</a><a class="nl" href="#results">Results</a><a class="nl" href="#failures">Failures</a><a class="nl" href="#bibtex">BibTeX</a></div></nav>
 
 <section class="hero dark">
   <div class="hero-body">
@@ -325,10 +325,29 @@
     </div>
     <p class="note has-text-centered">Box-initialized tracking. † Size-selected composite; protocols in the paper's appendix.</p>
 
+  </div>
+</section>
+
+<section class="section plain" id="failures">
+  <div class="container is-max-desktop">
+    <div class="has-text-centered"><div class="eyebrow">06 · Failure cases</div><h2 class="title is-3 section-title">When Dual-Agent makes it worse</h2></div>
+    <p class="lead">Dual-Agent is only as reliable as its verifier. On SecVOS, 11 of the 52 checkable commits lowered the score, almost all by overriding a track that was already right. Three of them, from the same run and with the same colours as above: SAM 3 left, Dual-Agent right.</p>
+  </div>
+  <div class="carousel-wrap">
+    <div id="carousel-fail" class="carousel results-carousel">
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/fail_hallucination.jpg"><source src="./static/videos/fail_hallucination.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Hallucinated recovery during an absence</h4><span class="jf">J&amp;F 82.9 → <b style="color:#f87171">46.7</b></span></div><p class="clip-cap">The car leaves the video for the interior shots. SAM 3 correctly outputs nothing. At frame 57 the confidence-variance trigger fires, the verifier votes INCORRECT, and the corrector returns a box for a target that is not there. The commit writes it into memory, and Dual-Agent paints the dashboard for 80 frames.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/fail_override.jpg"><source src="./static/videos/fail_override.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Overriding a correct track with the wrong object</h4><span class="jf">J&amp;F 85.0 → <b style="color:#f87171">65.8</b></span></div><p class="clip-cap">After an interior shot the red car returns and SAM 3 is back on it. An occlusion poll at frame 204 calls the verifier, which rejects the correct box; the corrector's replacement lands on the black car next to it, and the wrong identity is propagated for 36 frames.</p></div>
+      <div class="item"><video class="vid" controls muted loop playsinline preload="metadata" poster="./static/videos/fail_absence.jpg"><source src="./static/videos/fail_absence.mp4" type="video/mp4"></video>
+        <div class="clip-head"><h4>Wrong absence at a reappearance</h4><span class="jf">J&amp;F 95.8 → <b style="color:#f87171">87.8</b></span></div><p class="clip-cap">The singer is tracked by both. A reappearance trigger at frame 168 calls the verifier, which flags the track; the corrector declares the target absent, and Dual-Agent outputs nothing for 13 frames while SAM 3 keeps her.</p></div>
+    </div>
+  </div>
+  <div class="container is-max-desktop">
     <h4 class="block-title">Limitations</h4>
     <div class="content limit" style="max-width: 860px; margin: 0 auto;">
       <ul>
-        <li>Dual-Agent is only as reliable as its verifier: 9 of 52 checkable commits on SecVOS overrode a correct track.</li>
+        <li>Dual-Agent is only as reliable as its verifier: in ambiguous scenes it can miss a failure or override a correct track, as above.</li>
         <li>It is not real-time: about 72 s per SecVOS video on one H100 against 12 s for SAM 3; FP8 verification and sparser polling bring this to 48 s at 76.4 J&amp;F.</li>
         <li>LaSOT-ext uses a size-selected composite; on VOT-LT recall rises while precision drops.</li>
       </ul>
@@ -358,6 +377,7 @@
     var opts = { slidesToScroll: 1, slidesToShow: 1, loop: true, infinite: false, autoplay: false, navigation: true, pagination: true };
     bulmaCarousel.attach('#carousel-secvos', opts);
     bulmaCarousel.attach('#carousel-lvos', opts);
+    bulmaCarousel.attach('#carousel-fail', opts);
   });
 </script>
 </body>
