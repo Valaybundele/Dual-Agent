@@ -459,10 +459,10 @@
   <div class="wrap rv">
     <div class="shead"><div class="eyebrow">How it works</div><h2 class="st">One correction, from trigger to memory reset</h2></div>
     <div class="flow">
-      <div class="step"><div class="ic"><i class="fas fa-wave-square"></i></div><div class="n">Step 1</div><h4>Trigger sparsely</h4><p>The verifier is called only when SAM 3's signals look wrong: during occlusion, after a reappearance, or when its confidence oscillates. A confident SAM 3 is left alone.</p></div>
-      <div class="step"><div class="ic"><i class="fas fa-search"></i></div><div class="n">Step 2</div><h4>Verify against the tracker's own history</h4><p>Qwen3-VL-8B-Thinking (zero-shot) sees two exemplars, four context frames with SAM 3's boxes, and the query. It finds the target before judging the box, so the verdict is about identity. Three votes (t, t+4, t+8) decide.</p></div>
-      <div class="step"><div class="ic"><i class="fas fa-crosshairs"></i></div><div class="n">Step 3</div><h4>Correct only on a detected failure</h4><p>A Qwen3-VL-4B-Instruct corrector, fine-tuned on 79,457 SAM 3 failures, predicts whether the target is visible and where. The verifier re-checks each proposal, up to three times.</p></div>
-      <div class="step"><div class="ic"><i class="fas fa-lock"></i></div><div class="n">Step 4</div><h4>Commit conservatively</h4><p>The fix overwrites SAM 3's memory only if it differs from the current box (IoU below 0.5). SAM 3 is then re-prompted and carries on; one reset recovers a whole segment.</p></div>
+      <div class="step"><div class="ic"><i class="fas fa-wave-square"></i></div><div class="n">Step 1</div><h4>Trigger sparsely</h4><p>The verifier runs only when SAM 3 looks unsure: during occlusion, after a reappearance, or when its confidence oscillates.</p></div>
+      <div class="step"><div class="ic"><i class="fas fa-search"></i></div><div class="n">Step 2</div><h4>Verify against the tracker's own history</h4><p>Qwen3-VL-8B-Thinking (zero-shot) sees two exemplars, four context frames with SAM 3's boxes, and the query. It finds the target first, so the verdict is about identity. Three votes (t, t+4, t+8) decide.</p></div>
+      <div class="step"><div class="ic"><i class="fas fa-crosshairs"></i></div><div class="n">Step 3</div><h4>Correct only on a detected failure</h4><p>A Qwen3-VL-4B-Instruct corrector, fine-tuned on 79,457 SAM 3 failures, predicts whether the target is visible and where. The verifier re-checks it, up to three times.</p></div>
+      <div class="step"><div class="ic"><i class="fas fa-lock"></i></div><div class="n">Step 4</div><h4>Commit conservatively</h4><p>The fix enters SAM 3's memory only if it differs from the current box (IoU below 0.5). SAM 3 is re-prompted and carries on; one reset recovers a whole segment.</p></div>
     </div>
   </div>
 </section>
@@ -470,7 +470,7 @@
 <section class="sec alt" id="results">
   <div class="wrap rv">
     <div class="shead"><div class="eyebrow">Results</div><h2 class="st">The harder the identity problem, the bigger the gain</h2>
-      <p class="lead">Gains are largest where propagation is weakest. On SecVOS, built around scene cuts, they grow from +1.0 on single-shot videos to +4.1 on videos with multiple scene changes. On LVOS-v2, Dual-Agent improves an already strong SAM 3 and posts the best unseen-object scores.</p></div>
+      <p class="lead">Gains are largest where propagation is weakest: on SecVOS, from +1.0 on single-shot videos to +4.1 on videos with multiple scene changes. On LVOS-v2, Dual-Agent improves an already strong SAM 3, with the best unseen-object scores.</p></div>
     <div class="two">
       <div>
         <div class="tt">SecVOS-160, J&amp;F by scene complexity</div>
@@ -505,7 +505,7 @@
     </div>
 
     <div class="block-title">Where the SecVOS gain comes from</div>
-    <p class="lead" style="text-align:center; max-width: 820px; margin: 0 auto 1.4rem;">Dual-Agent rarely intervenes, and lands where propagation failed: it touches 4.8% of frames, with 88 commits across 160 videos (67 better than SAM 3, 19 worse, 2 unchanged).</p>
+    <p class="lead" style="text-align:center; max-width: 820px; margin: 0 auto 1.4rem;">Dual-Agent touches only 4.8% of frames, and lands where propagation failed: 88 commits across 160 videos (67 better than SAM 3, 19 worse, 2 unchanged).</p>
     <div class="two">
       <div>
         <div class="tt">Commits by SAM 3 state</div>
@@ -529,7 +529,7 @@
             <tr class="hi"><td>+ confidence-variance trigger (full)</td><td><strong>76.9</strong></td></tr>
           </tbody>
         </table></div>
-        <p class="note">Occlusion and reappearance cues alone recover little; the confidence-variance trigger catches drift before SAM 3 admits a loss and supplies most of the gain.</p>
+        <p class="note">Occlusion and reappearance cues alone recover little; the confidence-variance trigger, which catches drift before SAM 3 admits a loss, supplies most of the gain.</p>
       </div>
     </div>
   </div>
